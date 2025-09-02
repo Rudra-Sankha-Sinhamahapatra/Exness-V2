@@ -1,0 +1,109 @@
+
+setInterval(() => {
+    if (Object.keys(latestPrices).length > 0) {
+        // console.log("Latest prices: ",latestPrices);
+        {/* 
+Latest prices:  {
+  BTC_USDC: {
+    price: 109998.7,
+    decimal: 1,
+  },
+  SOL_USDC: {
+    price: 202.75,
+    decimal: 2,
+  },
+  ETH_USDC: {
+    price: 4377.53,
+    decimal: 2,
+  },
+}
+Latest prices:  {
+  BTC_USDC: {
+    price: 109998.7,
+    decimal: 1,
+  },
+  SOL_USDC: {
+    price: 202.75,
+    decimal: 2,
+  },
+  ETH_USDC: {
+    price: 4377.53,
+    decimal: 2,
+  },
+}
+            */}
+    }
+
+    const updates = Object.entries(latestPrices).map(([symbolName, data]) => ({
+        asset: symbolName.split("_")[0],
+        price: data.price,
+        decimals: data.decimal
+    }));
+
+    console.log(updates)
+
+    {/* 
+        [
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }
+]
+[
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }
+]
+[
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }
+]
+[
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }, {
+    asset: "SOL",
+    price: 202.75,
+    decimals: 2,
+  }
+]
+[
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }, {
+    asset: "SOL",
+    price: 202.75,
+    decimals: 2,
+  }
+]
+[
+  {
+    asset: "ETH",
+    price: 4377.57,
+    decimals: 2,
+  }, {
+    asset: "SOL",
+    price: 202.75,
+    decimals: 2,
+  }
+]
+
+        */}
+
+    if (updates.length > 0) {
+        const payload = { price_updates: updates };
+        // console.log("payload: ",payload)
+        redis.publish('price_channel', JSON.stringify(payload));
+        // console.log("Published: ", payload);
+    }
+}, 100)

@@ -10,7 +10,7 @@ let Id = 1;
 ws.on('open', () => {
     console.log("Connected to backpack WS");
 
-    assets.forEach((asset, i) => {
+    assets.forEach((asset) => {
         const subscribeMessages = [
             {
                 method: "SUBSCRIBE",
@@ -59,14 +59,15 @@ ws.on("message", (msg) => {
 });
 
 ws.on("error", (err) => {
-  console.error("WS error:", err);
+    console.error("WS error:", err);
 });
 
 ws.on("close", (code, reason) => {
-  console.error("WS closed:", code, reason.toString());
+    console.error("WS closed:", code, reason.toString());
 });
 
 setInterval(() => {
+    // logs.txt
     // if (Object.keys(latestPrices).length > 0) {
     //     console.log("Latest prices: ",latestPrices);
     // }
