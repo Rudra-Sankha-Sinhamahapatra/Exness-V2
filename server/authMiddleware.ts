@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import { verifyToken } from "./store";
+import { verifyToken } from "./token";
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const token = req.cookies?.auth;

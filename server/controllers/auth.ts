@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { generateLinkToken, generateSessionToken, verifyToken } from "../store";
+import { generateLinkToken, generateSessionToken, verifyToken } from "../token";
 import { resendClient } from "../resend";
 import { BACKEND_URL, FRONTEND_URL } from "../config";
 

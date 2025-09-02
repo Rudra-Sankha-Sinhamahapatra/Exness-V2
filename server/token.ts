@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "./config";
 
-const tokens: Record<string,string> = {};
 const TOKEN_EXPIRY = "10m"; 
 const COOKIE_EXPIRY = "7d";
 
