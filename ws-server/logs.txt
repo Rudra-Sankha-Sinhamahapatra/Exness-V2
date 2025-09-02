@@ -40,6 +40,35 @@ Latest prices:  {
         decimals: data.decimal
     }));
 
+
+   {/* [
+  [ "ETH_USDC", {
+      price: 4367.49,
+      decimal: 2,
+    } ], [ "BTC_USDC", {
+      price: 109908.9,
+      decimal: 1,
+    } ], [ "SOL_USDC", {
+      price: 202.67,
+      decimal: 2,
+    } ]
+]
+[
+  [ "ETH_USDC", {
+      price: 4367.49,
+      decimal: 2,
+    } ], [ "BTC_USDC", {
+      price: 109908.9,
+      decimal: 1,
+    } ], [ "SOL_USDC", {
+      price: 202.67,
+      decimal: 2,
+    } ]
+]
+*/}
+
+console.log(Object.entries(latestPrices))
+
     console.log(updates)
 
     {/* 
