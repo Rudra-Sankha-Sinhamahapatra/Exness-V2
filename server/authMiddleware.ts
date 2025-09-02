@@ -2,7 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { verifyToken } from "./token";
 
 export function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const token = req.cookies?.auth;
+  const token = req.cookies?.authToken;
   if (!token) return res.status(401).json({ error: "Not authenticated" });
 
   const email = verifyToken(token);

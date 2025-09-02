@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { generateLinkToken, generateSessionToken, verifyToken } from "../token";
 import { resendClient } from "../resend";
 import { BACKEND_URL, FRONTEND_URL } from "../config";
+import { redis } from "../redis";
 
 async function SendAuthEmail(email: string, type: "signup" | "signin", token: string) {
     const link = `${BACKEND_URL}/api/v1/signin/post?token=${token}`;
@@ -63,6 +64,11 @@ export const authPost = async (req: Request, res: Response) => {
 
         const email = verifyToken(token);
         if (!email) return res.status(400).json({ error: "Invalid/expired token" });
+
+        const walletChannel = "user_wallet_stream";
+        const event = "INITIALIZE_WALLET" 
+
+        await redis.lpush(walletChannel, JSON.stringify({ email ,event}))
 
         const sessionToken = generateSessionToken(email);
         res.cookie("authToken", sessionToken, {
