@@ -74,7 +74,7 @@ setInterval(() => {
 
     const updates = Object.entries(latestPrices).map(([symbolName, data]) => ({
         asset: symbolName.split("_")[0],
-        price: data.price,
+        price: Math.round(data.price * 10** data.decimal),
         decimals: data.decimal
     }));
 
