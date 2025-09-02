@@ -132,6 +132,48 @@ console.log(Object.entries(latestPrices))
     if (updates.length > 0) {
         const payload = { price_updates: updates };
         // console.log("payload: ",payload)
+
+    {/*
+     payload:  {
+  price_updates: [
+    {
+      asset: "ETH",
+      price: 4376.34,
+      decimals: 2,
+    }, {
+      asset: "SOL",
+      price: 202.84,
+      decimals: 2,
+    }
+  ],
+}
+payload:  {
+  price_updates: [
+    {
+      asset: "ETH",
+      price: 4376.34,
+      decimals: 2,
+    }, {
+      asset: "SOL",
+      price: 202.84,
+      decimals: 2,
+    }
+  ],
+}
+payload:  {
+  price_updates: [
+    {
+      asset: "ETH",
+      price: 4376.34,
+      decimals: 2,
+    }, {
+      asset: "SOL",
+      price: 202.84,
+      decimals: 2,
+    }
+  ],
+}
+    */}
         redis.publish('price_channel', JSON.stringify(payload));
         // console.log("Published: ", payload);
     }
