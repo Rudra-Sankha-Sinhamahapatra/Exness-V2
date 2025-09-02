@@ -65,7 +65,7 @@ export const authPost = async (req: Request, res: Response) => {
         if (!email) return res.status(400).json({ error: "Invalid/expired token" });
 
         const sessionToken = generateSessionToken(email);
-        res.cookie("auth", sessionToken, {
+        res.cookie("authToken", sessionToken, {
             httpOnly: true,
             secure: false, 
             sameSite: "lax",
