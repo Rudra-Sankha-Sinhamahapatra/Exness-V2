@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "./config";
 
-const TOKEN_EXPIRY = "7d"; 
+const TOKEN_EXPIRY = "5m"; 
 const COOKIE_EXPIRY = "7d";
 
 export const generateLinkToken = (email:string) => {
