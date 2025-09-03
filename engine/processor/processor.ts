@@ -111,7 +111,6 @@ export async function Processor(event: string | undefined, data: EventData) {
 
                 const currentPrice = latestAssetPrices[trade.asset].price;
                 const assetDecimals = latestAssetPrices[trade.asset].decimals;
-                const usdcDecimals = userBalanceForClose.usdc.decimals || 2;
 
                 const pnl = calculatePnL(
                     trade.type,
