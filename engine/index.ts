@@ -1,6 +1,7 @@
 import { redis } from "./redis";
 import { latestAssetPrices } from "./store/assetPrice";
 import { listenUserWallet } from "./watcher/balanceWatcher";
+import { listenTrades } from "./watcher/tradesWatcher";
 
 interface assetUpdate {
   asset: string;
@@ -37,6 +38,11 @@ interface assetUpdate {
   listenUserWallet().catch(error => {
     console.error("Error processing user wallet balance:", error);
   });
+
+  listenTrades().catch(error => {
+  console.error("Error in trade watcher:",error);
+  });
+
       console.log("All listeners started");
 })()
 

@@ -29,9 +29,21 @@ export function initializeBalance(email:string) {
 }
 
 export function getUserBalance(email: string) {
-    const balance = userBalances.get(email);
+      const balance = userBalances.get(email);
     if(!balance) {
-        initializeBalance(email)
+        const newBalance = initializeBalance(email);
+        return newBalance;
     }
+    return balance;
+}
+
+export function updateUserBalance(email: string, balance: UserBalance): UserBalance {
+    userBalances.set(email, balance);
+    console.log(`Updated balance for ${email}:`, {
+        usdc: balance.usdc.balance.toString(),
+        btc: balance.btc.balance.toString(),
+        eth: balance.eth.balance.toString(),
+        sol: balance.sol.balance.toString()
+    });
     return balance;
 }

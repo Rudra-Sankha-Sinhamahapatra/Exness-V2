@@ -1,30 +1,39 @@
 import { REDIS_PUBLISHER } from "../redis";
-import { getUserBalance, initializeBalance } from "../store/balance";
+import { calculatePnL } from "../services/calculatePnL";
+import { latestAssetPrices, type Asset } from "../store/assetPrice";
+import { getUserBalance, initializeBalance, updateUserBalance } from "../store/balance";
+import { closeTrade, createTrade, getTrade } from "../store/trade";
 
 type EventData = {
     email: string;
     event?: string;
     responseChannel?: string;
+    orderId?: string;
+    asset?: string;
+    type?: 'long' | 'short';
+    margin?: number;
+    leverage?: number;
+    slippage?: number;
 }
 
 function serializeBigInt(data: any): string {
-    return JSON.stringify(data, (_key, value) => 
+    return JSON.stringify(data, (_key, value) =>
         typeof value === 'bigint' ? Number(value) : value
     );
 }
 
 export async function Processor(event: string | undefined, data: EventData) {
     let result;
-    
+
     try {
         console.log("Processing event:", event, "for email:", data.email);
-        
-        switch(event) {
+
+        switch (event) {
             case "GET_USER_BALANCE":
                 result = getUserBalance(data.email);
                 console.log("Getting balance for:", data.email);
                 break;
-            
+
             case "GET_USDC_BALANCE":
                 const balance = getUserBalance(data.email);
                 if (!balance) {
@@ -36,13 +45,113 @@ export async function Processor(event: string | undefined, data: EventData) {
                 };
                 console.log("Getting USDC balance for:", data.email, result);
                 break;
-            
+
             case "INITIALIZE_WALLET":
                 result = initializeBalance(data.email);
                 console.log("Initializing wallet for:", data.email);
                 break;
-                
-            default: 
+
+            case "CREATE_TRADE":
+                if (!data.asset || !data.type || !data.margin || !data.leverage || !data.orderId) {
+                    throw new Error("Missing trade parameters");
+                }
+
+                const userBalance = getUserBalance(data.email);
+                if (!userBalance) {
+                    throw new Error("User balance not found");
+                }
+
+                const marginBigInt = BigInt(data.margin);
+                if (userBalance.usdc.balance < marginBigInt) {
+                    throw new Error("Insufficient margin");
+                }
+
+                const entryPrice = latestAssetPrices[data.asset as Asset].price;
+                if (!entryPrice) {
+                    throw new Error("Asset price not available");
+                }
+
+                userBalance.usdc.balance -= marginBigInt;
+                updateUserBalance(data.email, userBalance);
+
+                result = createTrade({
+                    orderId: data.orderId,
+                    email: data.email,
+                    asset: data.asset as Asset,
+                    type: data.type,
+                    margin: marginBigInt,
+                    leverage: data.leverage,
+                    entryPrice: entryPrice,
+                    slippage: data.slippage || 0,
+                    status: 'open',
+
+                    timestamp: Date.now()
+                })
+
+                console.log('Trade executed:', result);
+                break;
+
+            case "CLOSE_TRADE":
+                if (!data.orderId) {
+                    throw new Error("Missing order id");
+                }
+                const trade = getTrade(data.orderId);
+                if (!trade) {
+                    throw new Error("Trade not found");
+                }
+
+                if (trade.email !== data.email) {
+                    throw new Error('Unauthorized to close this trade');
+                }
+
+                const userBalanceForClose = getUserBalance(data.email);
+                if (!userBalanceForClose) {
+                    throw new Error("User balance not found");
+                }
+
+                const currentPrice = latestAssetPrices[trade.asset].price;
+                const assetDecimals = latestAssetPrices[trade.asset].decimals;
+                const usdcDecimals = userBalanceForClose.usdc.decimals || 2;
+
+                const pnl = calculatePnL(
+                    trade.type,
+                    Number(trade.entryPrice),
+                    Number(currentPrice),
+                    Number(trade.margin),
+                    trade.leverage,
+                    assetDecimals
+                )
+
+                if (userBalanceForClose) {
+                    if (pnl < 0n) {  // Loss scenario
+                        if (-pnl >= trade.margin) {
+                            // Complete liquidation - user loses entire margin
+                            userBalanceForClose.usdc.balance += 0n;
+                            console.log("Trade liquidated, margin lost:", trade.margin.toString());
+                        } else {
+                            // Partial loss - remaining margin after loss
+                            const remainingMargin = trade.margin + pnl;
+                            userBalanceForClose.usdc.balance += remainingMargin;
+                            console.log("Trade closed with loss, returning:", remainingMargin.toString());
+                        }
+                    } else {
+                        // Profit scenario
+                        const profitAmount = trade.margin + pnl;
+                        userBalanceForClose.usdc.balance += profitAmount;
+                        console.log("Trade closed with profit, returning:", profitAmount.toString());
+                    }
+                    updateUserBalance(data.email, userBalanceForClose)
+                }
+
+                result = {
+                    ...closeTrade(data.orderId),
+                    pnl: pnl,
+                    isLiquidated: pnl < 0n && (-pnl >= trade.margin)
+                };
+                console.log("Trade closed with PnL:", pnl.toString());
+                break;
+
+            default:
                 console.log("Unknown event:", event);
                 throw new Error(`Unknown event: ${event}`);
         }
