@@ -1,27 +1,27 @@
-import { redis } from "../redis";
+import { redis, REDIS_SUB } from "../redis";
 import type { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 
 
 interface BalanceResponse {
-  success: boolean;
-  data: {
-    email: string;
-    btc: { balance: bigint; decimals: number };
-    eth: { balance: bigint; decimals: number };
-    sol: { balance: bigint; decimals: number };
-    usdc: { balance: bigint; decimals: number };
-  };
-  error: string
+    success: boolean;
+    data: {
+        email: string;
+        btc: { balance: bigint; decimals: number };
+        eth: { balance: bigint; decimals: number };
+        sol: { balance: bigint; decimals: number };
+        usdc: { balance: bigint; decimals: number };
+    };
+    error: string
 }
 
 export const getUserBalance = async (req: Request, res: Response) => {
     try {
         const email = req.user.email;
         if (!email) {
-            res.status(400).json({
+            res.status(401).json({
                 success: false,
-                message: "Email not found"
+                message: "Unauthorized Access"
             });
             return
         }
@@ -32,33 +32,34 @@ export const getUserBalance = async (req: Request, res: Response) => {
         const responseId = uuidv4();
         const responseChannel = `balance_response_${responseId}`;
 
+        await REDIS_SUB.subscribe(responseChannel);
+
         await redis.lpush(walletChannel, JSON.stringify({
             email,
             "event": event,
             responseChannel
         }));
 
-        await redis.subscribe(responseChannel);
 
         const balancePromise = new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-                redis.unsubscribe(responseChannel);
+                REDIS_SUB.unsubscribe(responseChannel);
                 reject(new Error("Balance request timed out"));
             }, 10000);
 
-            redis.once('message', (channel, message) => {
+            REDIS_SUB.once('message', (channel, message) => {
                 if (channel === responseChannel) {
                     clearTimeout(timeout);
-                    redis.unsubscribe(responseChannel);
+                    REDIS_SUB.unsubscribe(responseChannel);
                     resolve(JSON.parse(message));
                 }
             });
         });
 
         const response = await balancePromise as BalanceResponse;
-        
+
         const formattedBalance = {
-              USDC: {
+            USDC: {
                 balance: Number(response.data.usdc.balance),
                 decimals: response.data.usdc.decimals
             },
@@ -90,9 +91,9 @@ export const getUsdcBalance = async (req: Request, res: Response) => {
     try {
         const email = req.user?.email;
         if (!email) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Email not found"
+                message: "Unauthorized Access"
             });
         }
 
@@ -101,6 +102,9 @@ export const getUsdcBalance = async (req: Request, res: Response) => {
         const responseId = uuidv4();
         const responseChannel = `balance_response_${responseId}`;
 
+
+        await REDIS_SUB.subscribe(responseChannel);
+
         await redis.lpush(walletChannel, JSON.stringify({
             email,
             event,
@@ -108,25 +112,23 @@ export const getUsdcBalance = async (req: Request, res: Response) => {
         }));
 
 
-        await redis.subscribe(responseChannel);
-
         const balancePromise = new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
-                redis.unsubscribe(responseChannel);
+                REDIS_SUB.unsubscribe(responseChannel);
                 reject(new Error("Balance request timed out"));
             }, 10000);
 
-            redis.once('message', (channel, message) => {
+            REDIS_SUB.once('message', (channel, message) => {
                 if (channel === responseChannel) {
                     clearTimeout(timeout);
-                    redis.unsubscribe(responseChannel);
+                    REDIS_SUB.unsubscribe(responseChannel);
                     resolve(JSON.parse(message));
                 }
             });
         });
 
         const response = await balancePromise as BalanceResponse;
-        
+
         if (!response.success) {
             throw new Error(response.error || 'Failed to get balance');
         }
