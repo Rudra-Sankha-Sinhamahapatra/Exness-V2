@@ -16,6 +16,7 @@ function restoreBigInt(obj: unknown): unknown {
 }
 
 export async function restoreSnapshot() {
+  try {
   const snapshot = await db.snapshot.findFirst({
     select: {id: true,openOrders: true, closedOrders: true, balances: true},
     orderBy: { createdAt: "desc" },
@@ -48,4 +49,7 @@ export async function restoreSnapshot() {
   );
 
   return { snapshot: snapshot.id };
+} catch(error) {
+  console.error("Failed to restore snapshot: ",error);
+}
 }

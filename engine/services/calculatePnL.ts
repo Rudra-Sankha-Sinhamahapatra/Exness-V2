@@ -6,7 +6,7 @@ export function calculatePnL(
     leverage: number,
     decimals: number
 ): bigint {
-
+     try {
     const entryPriceBigInt = BigInt(entryPrice);
     const currentPriceBigInt = BigInt(currentPrice);
     const marginBigInt = BigInt(margin);
@@ -36,4 +36,8 @@ export function calculatePnL(
 
     console.log('PnL Calculation result:', pnl.toString());
     return pnl
+} catch(error) {
+    console.error("Failed to calculate PNL: ",error);
+    return BigInt(0);
+}
 }
