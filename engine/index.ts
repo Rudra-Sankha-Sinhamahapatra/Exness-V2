@@ -1,4 +1,6 @@
 import { redis } from "./redis";
+import { restoreSnapshot } from "./snapshot/restoreSnapshot";
+import { takeSnapshot } from "./snapshot/takeSnapshot";
 import { latestAssetPrices } from "./store/assetPrice";
 import { listenUserWallet } from "./watcher/balanceWatcher";
 import { listenTrades } from "./watcher/tradesWatcher";
@@ -10,6 +12,7 @@ interface assetUpdate {
 }
 
 (async () => {
+  await restoreSnapshot();
   const channel = 'price_channel';
   console.log(`Subscribing to price_channel ${channel}`);
   await redis.subscribe(channel);
@@ -42,6 +45,14 @@ interface assetUpdate {
   listenTrades().catch(error => {
   console.error("Error in trade watcher:",error);
   });
+
+  setInterval(async () => {
+    try {
+      await takeSnapshot();
+    } catch (error) {
+      console.error("Snapshot failed:",error)
+    }
+  },60_000); // 1 mint
 
       console.log("All listeners started");
 })()

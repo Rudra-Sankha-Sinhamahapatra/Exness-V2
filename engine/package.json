@@ -4,17 +4,19 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev":"bun run index.ts"
+    "dev": "bun run index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/dotenv": "^8.2.3",
-    "@types/ioredis": "^5.0.0"
+    "@types/ioredis": "^5.0.0",
+    "prisma": "^6.15.0"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/client": "^6.15.0",
     "dotenv": "^17.2.1",
     "ioredis": "^5.7.0"
   }

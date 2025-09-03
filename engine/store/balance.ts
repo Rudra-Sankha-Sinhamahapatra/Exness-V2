@@ -12,7 +12,7 @@ export interface UserBalance {
  eth: assetBalance
 }
 
-const userBalances = new Map<string,UserBalance>();
+export const userBalances = new Map<string,UserBalance>();
 
 export function initializeBalance(email:string) {
     const defaultBalance : UserBalance = {

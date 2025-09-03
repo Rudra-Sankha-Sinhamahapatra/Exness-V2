@@ -13,7 +13,7 @@ export interface Trade {
     timestamp: number;
 }
 
-const trades = new Map<string, Trade>();
+export const trades = new Map<string, Trade>();
 
 export function createTrade(trade: Trade) {
     trades.set(trade.orderId, trade);
