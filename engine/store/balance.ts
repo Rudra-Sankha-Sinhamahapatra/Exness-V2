@@ -19,8 +19,8 @@ export function initializeBalance(email:string) {
         email,
         usdc:{balance: BigInt(500000), decimals: 2},
         btc: {balance: BigInt(0), decimals: 4},
-        eth: {balance: BigInt(0), decimals: 4},
-        sol: {balance: BigInt(0), decimals: 4}
+        eth: {balance: BigInt(0), decimals: 6},
+        sol: {balance: BigInt(0), decimals: 6}
     }
 
     userBalances.set(email,defaultBalance);
