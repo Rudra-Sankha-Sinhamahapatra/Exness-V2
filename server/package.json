@@ -8,6 +8,7 @@
     "start": "bun run index.ts"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.4",
     "@types/bun": "latest",
     "@types/cookie-parser": "^1.4.9",
     "@types/dotenv": "^8.2.3",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
+    "axios": "^1.11.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",

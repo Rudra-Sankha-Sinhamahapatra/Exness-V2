@@ -4,6 +4,7 @@ import { authMiddleware } from "../authMiddleware";
 import { getUsdcBalance, getUserBalance } from "../controllers/balance";
 import { supportedAssets } from "../controllers/assets";
 import { closeTrade, createTrade } from "../controllers/trade";
+import { getKlines } from "../controllers/klines";
 
 const router = Router();
 
@@ -15,5 +16,6 @@ router.get('/balance/usd', authMiddleware, getUsdcBalance);
 router.get('/supportedAssets',supportedAssets);
 router.post('/trade/create', authMiddleware,createTrade);
 router.post('/trade/close', authMiddleware, closeTrade);
+router.get('/klines',getKlines);
 
 export default router;
