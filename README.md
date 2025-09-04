@@ -1,6 +1,4 @@
-# Super 30 - Batch 2 Contest 1
-
-**(Improved Microservice Version of Exness)**
+# Exness
 
 ## Architecture
 
