@@ -1,0 +1,14 @@
+{
+  "name": "exness",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "server",
+    "poller",
+    "engine",
+    "frontend"
+  ],
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}

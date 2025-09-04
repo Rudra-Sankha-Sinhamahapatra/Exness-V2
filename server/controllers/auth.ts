@@ -3,6 +3,8 @@ import { generateLinkToken, generateSessionToken, verifyToken } from "../token";
 import { resendClient } from "../resend";
 import { BACKEND_URL, FRONTEND_URL } from "../config";
 import { REDIS_PUSH_QUEUE } from "../redis";
+import { prisma } from "@exness/db";
+
 
 async function SendAuthEmail(email: string, type: "signup" | "signin", token: string) {
     const link = `${BACKEND_URL}/api/v1/signin/post?token=${token}`;
@@ -18,6 +20,20 @@ export const signup = async (req: Request, res: Response) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: "Email required" });
+        
+        const exisingUser = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+        
+        if(exisingUser) {
+            res.status(409).json({
+                success: false,
+                message: "User already exist"
+            })
+            return;
+        }
 
         const token = generateLinkToken(email);
         await SendAuthEmail(email, "signup", token);
@@ -39,8 +55,22 @@ export const signin = async (req: Request, res: Response) => {
         const { email } = req.body;
         if (!email) return res.status(400).json({ error: "Email required" });
 
+        const exisingUser = await prisma.user.findUnique({
+            where: {
+                email
+            }
+        });
+
+        if(!exisingUser) {
+            res.status(404).json({
+                success: false,
+                message: "User not found"
+            })
+            return;
+        }
+
         const token = generateLinkToken(email);
-        await SendAuthEmail(email, "signin", token);
+        await SendAuthEmail(email, "signin", token)
 
         res.status(200).json({
             message: "Kindly check your mail for the signin link"
@@ -71,6 +101,20 @@ export const authPost = async (req: Request, res: Response) => {
         await REDIS_PUSH_QUEUE.lpush(walletChannel, JSON.stringify({ email ,event}))
 
         const sessionToken = generateSessionToken(email);
+        
+        const exisingUser = await prisma.user.findUnique({
+            where: { email }
+        });
+
+        if(!exisingUser) {
+         await prisma.user.create({
+            data: {
+             email,
+             lastLoggedIn: new Date()
+            }
+        })
+    }
+
         res.cookie("authToken", sessionToken, {
             httpOnly: true,
             secure: false, 
@@ -79,6 +123,7 @@ export const authPost = async (req: Request, res: Response) => {
 
         res.redirect(`${FRONTEND_URL}/dashboard`);
     } catch (error) {
+        console.log('error: ',error);
         res.status(500).json({
             message: "Internal Server Error"
         })
