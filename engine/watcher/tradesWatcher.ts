@@ -1,4 +1,5 @@
 
+import { isShuttingDown } from "..";
 import { Processor } from "../processor/processor";
 import { REDIS_TRADE_RECEIVE_QUEUE } from "../redis";
 
@@ -7,7 +8,7 @@ export async function listenTrades() {
     const CHANNEL = "trade_stream";
 
     console.log("Started trades listener on channel:", CHANNEL);
-    while (true) {
+    while (!isShuttingDown) {
         try {
             const response = await REDIS_TRADE_RECEIVE_QUEUE.brpop(CHANNEL, 0);
 
@@ -22,8 +23,10 @@ export async function listenTrades() {
                 console.log(`Processed trade for ${parsedData.email}:`, result);
             }
         } catch (error) {
-            console.error("Error processing trade stream:", error);
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            if (!isShuttingDown) {
+                console.error("Error processing trade stream:", error);
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
-import { db } from "../db";
+import { pool } from "../database";
 import { userBalances } from "../store/balance";
 import { trades } from "../store/trade";
+import { v4 as uuidv4 } from "uuid";
 
 function serializeBigInt(obj: any) {
     return JSON.parse(
@@ -21,17 +22,21 @@ export async function takeSnapshot() {
         )
 
         const balances = Array.from(userBalances.values());
+         const snapshotId = uuidv4();
 
-        const snapshot = await db.snapshot.create({
-            data: {
-                openOrders: serializeBigInt(openTrades),
-                closedOrders: serializeBigInt(closedTrades),
-                balances: serializeBigInt(balances),
-            }
-        })
+                await pool.query(
+            `INSERT INTO snapshots (id, open_orders, closed_orders, balances) 
+             VALUES ($1, $2, $3, $4)`,
+            [
+                snapshotId,
+                JSON.stringify(serializeBigInt(openTrades)),
+                JSON.stringify(serializeBigInt(closedTrades)),
+                JSON.stringify(serializeBigInt(balances))
+            ]
+        );
 
         // console.log("Snapshot saved:", snapshot.id);
-        return snapshot;
+        return { id: snapshotId };
 
     } catch (error) {
         console.error("Failed to take snapshot: ", error);

@@ -1,3 +1,4 @@
+import { initDB, pool } from "./database";
 import { redis } from "./redis";
 import { restoreSnapshot } from "./snapshot/restoreSnapshot";
 import { takeSnapshot } from "./snapshot/takeSnapshot";
@@ -15,9 +16,12 @@ type StreamFieldList = string[]; // ["data", "{...}", "k2", "v2", ...]
 type StreamEntry = [id: string, fields: StreamFieldList];
 type StreamRead = Array<[stream: string, entries: StreamEntry[]]>;
 
-const STREAM   = "price_stream";
-const GROUP    = "engine_group";
+const STREAM = "price_stream";
+const GROUP = "engine_group";
 const CONSUMER = "engine_1";
+
+export let isShuttingDown = false;
+let shutdownInProgress = false;
 
 async function ensureGroup() {
   try {
@@ -32,7 +36,7 @@ function fieldsToObject(fields: StreamFieldList): Record<string, string> {
   for (let i = 0; i + 1 < fields.length; i += 2) {
     const k = fields[i];
     const v = fields[i + 1] ?? "";
-   if(typeof k === "string") obj[k] = v; 
+    if (typeof k === "string") obj[k] = v;
   }
   return obj;
 }
@@ -40,7 +44,7 @@ function fieldsToObject(fields: StreamFieldList): Record<string, string> {
 async function startPriceListener() {
   await ensureGroup();
 
-  while (true) {
+  while (!isShuttingDown) {
     const res = (await redis.xreadgroup(
       "GROUP", GROUP, CONSUMER,
       "COUNT", 100,
@@ -84,6 +88,7 @@ let snapshotInterval: NodeJS.Timeout;
 
 async function main() {
   try {
+    await initDB();
     await restoreSnapshot();
     console.log("Restored snapshot");
 
@@ -110,17 +115,34 @@ async function main() {
     }, 60_000);
   } catch (error) {
     console.error("Failed to start engine:", error);
+    await redis.quit();
+    await pool.end();
+
     process.exit(1);
   }
 }
 
 process.on('SIGINT', async () => {
+  if (shutdownInProgress) {
+    console.log('Forced shutdown...');
+    process.exit(1);
+  }
+
   console.log('Shutting down...');
   try {
+    isShuttingDown = true;
+    shutdownInProgress = true;
+
     if (snapshotInterval) {
       clearInterval(snapshotInterval);
     }
-    await redis.quit();
+
+    await Promise.all([
+      redis.quit(),
+      pool.end()
+    ]);
+
+    console.log('Connections closed');
     process.exit(0);
   } catch (error) {
     console.error('Shutdown error:', error);

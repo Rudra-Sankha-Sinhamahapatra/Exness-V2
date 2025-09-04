@@ -1,3 +1,4 @@
+import { prisma } from "@exness/db";
 import { REDIS_SENDER_QUEUE } from "../redis";
 import { calculatePnL } from "../services/calculatePnL";
 import { latestAssetPrices, type Asset } from "../store/assetPrice";
@@ -47,8 +48,14 @@ export async function Processor(event: string | undefined, data: EventData) {
                 break;
 
             case "INITIALIZE_WALLET":
-                result = initializeBalance(data.email);
-                console.log("Initializing wallet for:", data.email);
+                const existingBalance = getUserBalance(data.email);
+                if (existingBalance) {
+                    console.log("Wallet already exists for:", data.email);
+                    result = existingBalance;
+                } else {
+                    result = initializeBalance(data.email);
+                    console.log("Initialized wallet for:", data.email);
+                }
                 break;
 
             case "CREATE_TRADE":
@@ -67,7 +74,9 @@ export async function Processor(event: string | undefined, data: EventData) {
                 }
 
                 const entryPrice = latestAssetPrices[data.asset as Asset].price;
-                if (!entryPrice) {
+                const itemDecimal = latestAssetPrices[data.asset as Asset].decimals;
+
+                if (entryPrice === undefined || entryPrice === null) {
                     throw new Error("Asset price not available");
                 }
 
@@ -84,8 +93,37 @@ export async function Processor(event: string | undefined, data: EventData) {
                     entryPrice: entryPrice,
                     slippage: data.slippage || 0,
                     status: 'open',
-
                     timestamp: Date.now()
+                })
+
+                const assetRow = await prisma.asset.upsert({
+                    where: { symbol: data.asset },
+                    update: { decimals: itemDecimal },
+                    create: {
+                        symbol: data.asset,
+                        name: data.asset,
+                        imageUrl: "",
+                        decimals: itemDecimal,
+                    },
+                });
+
+                const userRow = await prisma.user.upsert({
+                    where: { email: data.email },
+                    update: {},
+                    create: { email: data.email },
+                });
+
+                const openPrice = Number(entryPrice) / 10 ** itemDecimal;
+
+                await prisma.existingTrade.create({
+                    data: {
+                        orderId: data.orderId!,
+                        openPrice,
+                        leverage: data.leverage!,
+                        liquidated: false,
+                        asset: { connect: { id: assetRow.id } },
+                        user: { connect: { id: userRow.id } },
+                    }
                 })
 
                 console.log('Trade executed:', result);
@@ -145,10 +183,25 @@ export async function Processor(event: string | undefined, data: EventData) {
                     updateUserBalance(data.email, userBalanceForClose)
                 }
 
+                const closePrice = Number(currentPrice) / 10 ** assetDecimals;
+                const rawPnlFloat = Number(pnl) / Number(10n ** BigInt(userBalanceForClose.usdc.decimals));
+                const pnlFloat = Number(rawPnlFloat.toFixed(2));
+                const isLiquidated = pnl < 0n && (-pnl >= trade.margin);
+
+                await prisma.existingTrade.update({
+                    where: {
+                        orderId: data.orderId!
+                    },
+                    data: {
+                        closePrice,
+                        pnl: pnlFloat,
+                        liquidated: isLiquidated
+                    }
+                })
                 result = {
                     ...closeTrade(data.orderId),
                     pnl: pnl,
-                    isLiquidated: pnl < 0n && (-pnl >= trade.margin)
+                    isLiquidated
                 };
                 console.log("Trade closed with PnL:", pnl.toString());
                 break;
