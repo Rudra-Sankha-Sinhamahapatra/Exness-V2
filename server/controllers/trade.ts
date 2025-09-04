@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
-import { redis, REDIS_SUB, TRADE_QUEUE } from "../redis";
+import { REDIS_PUSH_QUEUE } from "../redis";
 import { v4 as uuidv4 } from "uuid";
+import { waitForResponse } from "../utils/waitForResponse";
 
 export type Asset = 'SOL' | 'ETH' | 'BTC';
 
@@ -20,6 +21,7 @@ interface TradeResponse {
     error?: string;
 }
 
+
 export const createTrade = async (req: Request, res: Response) => {
     try {
         const email = req.user.email;
@@ -37,10 +39,7 @@ export const createTrade = async (req: Request, res: Response) => {
         const QUEUE_CHANNEL = "trade_stream";
         const QUEUE_EVENT = "CREATE_TRADE";
 
-
-        await REDIS_SUB.subscribe(responseChannel);
-
-        await TRADE_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
+        await REDIS_PUSH_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
             email,
             event: QUEUE_EVENT,
             responseChannel,
@@ -48,22 +47,7 @@ export const createTrade = async (req: Request, res: Response) => {
             ...tradeData
         }));
 
-        const tradePromise = new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                REDIS_SUB.unsubscribe(responseChannel);
-                reject(new Error("Trade request timed out"));
-            }, 10000);
-
-            REDIS_SUB.once('message', (channel, message) => {
-                if (channel === responseChannel) {
-                    clearTimeout(timeout);
-                    REDIS_SUB.unsubscribe(responseChannel);
-                    resolve(JSON.parse(message));
-                }
-            });
-        });
-
-        const response = await tradePromise as TradeResponse;
+        const response = await waitForResponse(responseChannel) as TradeResponse;
 
         if (!response.success) {
             throw new Error(response.error || "Trade failed");
@@ -100,32 +84,14 @@ export const closeTrade = async (req: Request, res: Response) => {
         const QUEUE_EVENT = 'CLOSE_TRADE';
         const QUEUE_CHANNEL = 'trade_stream';
 
-
-        await REDIS_SUB.subscribe(responseChannel);
-
-        await TRADE_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
+        await REDIS_PUSH_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
             email,
             event: QUEUE_EVENT,
             responseChannel,
             orderId
         }));
 
-        const tradePromise = new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => {
-                REDIS_SUB.unsubscribe(responseChannel);
-                reject(new Error("Trade close request timed out"));
-            }, 10000);
-
-            REDIS_SUB.once('message', (channel, message) => {
-                if (channel === responseChannel) {
-                    clearTimeout(timeout);
-                    REDIS_SUB.unsubscribe(responseChannel);
-                    resolve(JSON.parse(message));
-                }
-            });
-        });
-
-        const response = await tradePromise as TradeResponse;
+        const response = await waitForResponse(responseChannel) as TradeResponse;
 
         if (!response.success) {
             throw new Error(response.error || "Failed to close trade");
