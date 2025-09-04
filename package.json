@@ -8,7 +8,21 @@
     "engine",
     "frontend"
   ],
+  "scripts": {
+    "test": "jest -c tests/jest.config.ts --runInBand",
+    "test:unit": "jest -c tests/jest.config.ts --runInBand tests/unit",
+    "test:e2e": "jest -c tests/jest.config.ts --runInBand tests/e2e"
+  },
   "devDependencies": {
-    "typescript": "^5"
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.3.1",
+    "@types/supertest": "^6.0.3",
+    "ioredis-mock": "^8.9.0",
+    "jest": "^30.1.3",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5",
+    "ws": "^8.18.3"
   }
 }

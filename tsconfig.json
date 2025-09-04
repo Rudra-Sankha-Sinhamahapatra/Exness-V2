@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@exness/db": ["./packages/db"]
+    }
+  },
+  "include": [
+    "server/**/*.ts",
+    "tests/**/*.ts"
+  ]
+}
