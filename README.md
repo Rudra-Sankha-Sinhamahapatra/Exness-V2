@@ -78,13 +78,18 @@ This ensures high-throughput, low-latency communication between services, while 
   * Resend (For Mailing)
 
 
+## Backend System
+
 * **Database Design**
 
   * Main Database Schema(PostgreSQL with Prisma)
-  
+  * Snapshot Database(PostgreSQL with Pg)
+
+<h4>Main Database Schema(PostgreSQL with Prisma)</h4>
+
   <img src="./docs/images/mainDB.png" alt="Main Database Architecture Diagram" width="800"/>
 
-  * Snapshot Database(PostgreSQL with Pg)
+<h4>Snapshot Database(PostgreSQL with Pg)</h4>
 
   <img src="./docs/images/snapshotDb.png" alt="Snapshots Database Architecture Diagram" width="800"/>
 
