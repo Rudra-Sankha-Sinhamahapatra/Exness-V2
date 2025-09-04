@@ -30,7 +30,7 @@ export async function takeSnapshot() {
             }
         })
 
-        console.log("Snapshot saved:", snapshot.id);
+        // console.log("Snapshot saved:", snapshot.id);
         return snapshot;
 
     } catch (error) {

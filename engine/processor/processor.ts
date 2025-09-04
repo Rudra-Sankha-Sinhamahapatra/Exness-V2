@@ -1,4 +1,4 @@
-import { REDIS_PUBLISHER } from "../redis";
+import { REDIS_SENDER_QUEUE } from "../redis";
 import { calculatePnL } from "../services/calculatePnL";
 import { latestAssetPrices, type Asset } from "../store/assetPrice";
 import { getUserBalance, initializeBalance, updateUserBalance } from "../store/balance";
@@ -99,6 +99,9 @@ export async function Processor(event: string | undefined, data: EventData) {
                 if (!trade) {
                     throw new Error("Trade not found");
                 }
+                if (trade.status === 'closed') {
+                    throw new Error("Trade is already closed")
+                }
 
                 if (trade.email !== data.email) {
                     throw new Error('Unauthorized to close this trade');
@@ -156,20 +159,37 @@ export async function Processor(event: string | undefined, data: EventData) {
         }
 
         if (data.responseChannel && result) {
-            await REDIS_PUBLISHER.publish(data.responseChannel, serializeBigInt({
+            await REDIS_SENDER_QUEUE.lpush(data.responseChannel, serializeBigInt({
                 success: true,
                 data: result
             }));
+
+            await REDIS_SENDER_QUEUE.expire(data.responseChannel, 60); // auto-clean after 60s
+
         }
 
         return result;
     } catch (error) {
         console.error("Processor error:", error);
         if (data.responseChannel) {
-            await REDIS_PUBLISHER.publish(data.responseChannel, JSON.stringify({
-                success: false,
-                error: error instanceof Error ? error.message : "Internal processing error"
-            }));
+            await REDIS_SENDER_QUEUE.lpush(
+                data.responseChannel,
+                JSON.stringify({
+                    success: false,
+                    errorCode: error instanceof Error ? error.message : "INTERNAL_ERROR",
+                    message:
+                        error instanceof Error ? error.message : "Internal error",
+                    httpStatus: ((): number => {
+                        const msg = error instanceof Error ? error.message : "";
+                        if (msg === "Trade not found") return 404;
+                        if (msg === "Trade is already closed") return 409;
+                        if (msg === "Unauthorized to close this trade") return 403;
+                        if (msg === "Missing order id") return 400;
+                        return 500;
+                    })(),
+                })
+            );
+            await REDIS_SENDER_QUEUE.expire(data.responseChannel, 60);
         }
         return null;
     }

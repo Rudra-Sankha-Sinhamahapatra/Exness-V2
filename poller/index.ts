@@ -66,7 +66,7 @@ ws.on("close", (code, reason) => {
     console.error("WS closed:", code, reason.toString());
 });
 
-setInterval(() => {
+setInterval(async() => {
     // logs.txt
     // if (Object.keys(latestPrices).length > 0) {
     //     console.log("Latest prices: ",latestPrices);
@@ -79,11 +79,10 @@ setInterval(() => {
     }));
 
     // console.log(updates)
-
     if (updates.length > 0) {
         const payload = { price_updates: updates };
         // console.log("payload: ",payload)
-        redis.publish('price_channel', JSON.stringify(payload));
+       await redis.xadd('price_stream', 'MAXLEN', '~', '10000', '*', 'data', JSON.stringify(payload))
         // console.log("Published: ", payload);
     }
 }, 100)

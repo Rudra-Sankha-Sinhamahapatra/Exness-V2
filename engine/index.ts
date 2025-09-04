@@ -11,49 +11,122 @@ interface assetUpdate {
   decimals: number
 }
 
-(async () => {
-  await restoreSnapshot();
-  const channel = 'price_channel';
-  console.log(`Subscribing to price_channel ${channel}`);
-  await redis.subscribe(channel);
-  console.log("Subscribed to the channel: ", channel);
+type StreamFieldList = string[]; // ["data", "{...}", "k2", "v2", ...]
+type StreamEntry = [id: string, fields: StreamFieldList];
+type StreamRead = Array<[stream: string, entries: StreamEntry[]]>;
 
-  redis.on('message', (chan: string, message: string) => {
-    if (chan !== channel) return;
-    try {
-      const data = JSON.parse(message);
-      if (data.price_updates && Array.isArray(data.price_updates)) {
-        data.price_updates.forEach((update: assetUpdate) => {
-          latestAssetPrices[update.asset as keyof typeof latestAssetPrices] = {
-            price: update.price,
-            decimals: update.decimals
-          };
-          // console.log(`Updated ${update.asset}: `,
-          //   (latestAssetPrices[update.asset as keyof typeof latestAssetPrices])
-          // );
-        });
+const STREAM   = "price_stream";
+const GROUP    = "engine_group";
+const CONSUMER = "engine_1";
+
+async function ensureGroup() {
+  try {
+    await redis.xgroup("CREATE", STREAM, GROUP, "$", "MKSTREAM");
+  } catch (e: any) {
+    if (!String(e?.message || e).includes("BUSYGROUP")) throw e;
+  }
+}
+
+function fieldsToObject(fields: StreamFieldList): Record<string, string> {
+  const obj: Record<string, string> = {};
+  for (let i = 0; i + 1 < fields.length; i += 2) {
+    const k = fields[i];
+    const v = fields[i + 1] ?? "";
+   if(typeof k === "string") obj[k] = v; 
+  }
+  return obj;
+}
+
+async function startPriceListener() {
+  await ensureGroup();
+
+  while (true) {
+    const res = (await redis.xreadgroup(
+      "GROUP", GROUP, CONSUMER,
+      "COUNT", 100,
+      "BLOCK", 0,
+      "STREAMS", STREAM,
+      ">"
+    )) as StreamRead | null;
+
+    if (!res) continue;
+
+    for (const [, entries] of res) {
+      for (const [id, fields] of entries) {
+        try {
+          const kv = fieldsToObject(fields);
+          const payload = kv["data"] ?? "{}";
+          const msg = JSON.parse(payload);
+
+          if (Array.isArray(msg.price_updates)) {
+            for (const u of msg.price_updates as Array<assetUpdate>) {
+              latestAssetPrices[u.asset as keyof typeof latestAssetPrices] = {
+                price: BigInt(u.price),
+                decimals: u.decimals,
+              };
+              // console.log("price updated");
+              // console.log(latestAssetPrices)
+            }
+          }
+
+          await redis.xack(STREAM, GROUP, id);
+        } catch (err) {
+          console.error("Failed to parse price entry:", err);
+          await redis.xack(STREAM, GROUP, id);
+        }
       }
-    } catch (error) {
-      console.error('Failed to parse price update:', error);
     }
-  });
+  }
+}
 
-  listenUserWallet().catch(error => {
-    console.error("Error processing user wallet balance:", error);
-  });
 
-  listenTrades().catch(error => {
-  console.error("Error in trade watcher:",error);
-  });
+let snapshotInterval: NodeJS.Timeout;
 
-  setInterval(async () => {
-    try {
-      await takeSnapshot();
-    } catch (error) {
-      console.error("Snapshot failed:",error)
+async function main() {
+  try {
+    await restoreSnapshot();
+    console.log("Restored snapshot");
+
+    Promise.all([
+      startPriceListener(),
+      listenUserWallet(),
+      listenTrades()
+    ]).catch(error => {
+      console.error("Error in listeners:", error);
+      process.exit(1);
+    })
+
+    console.log("All listeners started");
+
+    if (snapshotInterval) {
+      clearInterval(snapshotInterval);
     }
-  },60_000); // 1 mint
 
-      console.log("All listeners started");
-})()
+    snapshotInterval = setInterval(async () => {
+      const snapshot = await takeSnapshot();
+      if (snapshot?.id) {
+        console.log(`Snapshot taken at ${new Date().toISOString()}`);
+      }
+    }, 60_000);
+  } catch (error) {
+    console.error("Failed to start engine:", error);
+    process.exit(1);
+  }
+}
+
+process.on('SIGINT', async () => {
+  console.log('Shutting down...');
+  try {
+    if (snapshotInterval) {
+      clearInterval(snapshotInterval);
+    }
+    await redis.quit();
+    process.exit(0);
+  } catch (error) {
+    console.error('Shutdown error:', error);
+    process.exit(1);
+  }
+});
+
+main();
 
