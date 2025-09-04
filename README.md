@@ -59,6 +59,12 @@ This ensures high-throughput, low-latency communication between services, while 
    * Periodically takes snapshots of trades/balances and writes them into PostgreSQL.
    * On restart, Engine restores its state from the latest snapshot.
 
+4. **Server & DB , Engine & DB**
+     
+   * During Signup We store user details on DB, signin we check existing Check
+   * The Assets which are supported in our platform we store on DB
+   * During create trades we insert data on DB, closed trades we update data on DB
+
 ---
 
 ## Tech Stack
@@ -68,7 +74,20 @@ This ensures high-throughput, low-latency communication between services, while 
   * Node.js + Express.js
   * Bun Runtime
   * Redis (Queues + Streams)
-  * PostgreSQL
+  * PostgreSQL (With Prisma ORM for main DB , Pg library for snapshots)
+  * Resend (For Mailing)
+
+
+* **Database Design**
+
+  * Main Database Schema(PostgreSQL with Prisma)
+  
+  <img src="./docs/images/mainDB.png" alt="Main Database Architecture Diagram" width="800"/>
+
+  * Snapshot Database(PostgreSQL with Pg)
+
+  <img src="./docs/images/snapshotDb.png" alt="Snapshots Database Architecture Diagram" width="800"/>
+
 
 * **Communication**
 
@@ -79,9 +98,11 @@ This ensures high-throughput, low-latency communication between services, while 
 * **Features**
 
   * Leveraged trading with customizable margin
+  * Auth Verification mail through mail via Resend
   * Real-time price ingestion via Redis Streams
   * PnL calculation with liquidation handling
   * Balance management
   * Trade execution and settlement
   * State persistence with snapshots to PostgreSQL
+  * Main Database to store Users,ExistingTrades & Assets for persistense
 
