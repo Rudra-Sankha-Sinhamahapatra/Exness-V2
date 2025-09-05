@@ -1,3 +1,4 @@
+import "jest"
 import Redis from "ioredis-mock"
 
 // we don't actually send mails
@@ -24,3 +25,12 @@ jest.mock("../server/utils/waitForResponse", () => ({
         data: { orderId: "test-order-id" }
     }))
 }))
+
+jest.mock("../server/authMiddleware", () => {
+    return {
+        authMiddleware: (req:any, _res:any, next:any) => {
+            if(!req.user) req.user = { email: "test@gmail.com"};
+            next()
+        }
+    }
+})
