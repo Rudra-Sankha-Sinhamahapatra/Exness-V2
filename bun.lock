@@ -26,20 +26,36 @@
         "ws": "^8.18.3",
       },
     },
+    "dbProcessor": {
+      "name": "snapshotprocessor",
+      "dependencies": {
+        "@exness/snapshotdb": "workspace:*",
+        "dotenv": "^17.2.2",
+        "ioredis": "^5.7.0",
+        "uuid": "^12.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/dotenv": "^8.2.3",
+        "@types/ioredis": "^5.0.0",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
     "engine": {
       "name": "engine",
       "dependencies": {
         "@exness/db": "workspace:*",
+        "@exness/snapshotdb": "workspace:*",
         "dotenv": "^17.2.1",
         "ioredis": "^5.7.0",
-        "pg": "^8.16.3",
         "uuid": "^11.1.0",
       },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/dotenv": "^8.2.3",
         "@types/ioredis": "^5.0.0",
-        "@types/pg": "^8.15.5",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -69,6 +85,21 @@
       "name": "@exness/db",
       "devDependencies": {
         "@types/bun": "latest",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/snapshot": {
+      "name": "@exness/snapshotdb",
+      "dependencies": {
+        "dotenv": "^17.2.2",
+        "pg": "^8.16.3",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "@types/dotenv": "^8.2.3",
+        "@types/pg": "^8.15.5",
       },
       "peerDependencies": {
         "typescript": "^5",
@@ -222,6 +253,8 @@
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.3.5", "", { "dependencies": { "@eslint/core": "^0.15.2", "levn": "^0.4.1" } }, "sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w=="],
 
     "@exness/db": ["@exness/db@workspace:packages/db"],
+
+    "@exness/snapshotdb": ["@exness/snapshotdb@workspace:packages/snapshot"],
 
     "@humanfs/core": ["@humanfs/core@0.19.1", "", {}, "sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA=="],
 
@@ -1521,6 +1554,8 @@
 
     "slash": ["slash@3.0.0", "", {}, "sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q=="],
 
+    "snapshotprocessor": ["snapshotprocessor@workspace:dbProcessor"],
+
     "source-map": ["source-map@0.6.1", "", {}, "sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g=="],
 
     "source-map-js": ["source-map-js@1.2.1", "", {}, "sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA=="],
@@ -1846,6 +1881,8 @@
     "resolve-cwd/resolve-from": ["resolve-from@5.0.0", "", {}, "sha512-qYg9KP24dD5qka9J47d0aVky0N+b4fTU89LN9iDnjB5waksiC49rvMB0PrUJQGoTmH50XPiqOvAjDfaijGxYZw=="],
 
     "simple-swizzle/is-arrayish": ["is-arrayish@0.3.2", "", {}, "sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ=="],
+
+    "snapshotprocessor/uuid": ["uuid@12.0.0", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-USe1zesMYh4fjCA8ZH5+X5WIVD0J4V1Jksm1bFTVBX2F/cwSXt0RO5w/3UXbdLKmZX65MiWV+hwhSS8p6oBTGA=="],
 
     "stack-utils/escape-string-regexp": ["escape-string-regexp@2.0.0", "", {}, "sha512-UpzcLCXolUWcNu5HtVMHYdXJjArjsF9C0aNnquZYY4uW/Vu0miy5YoWvbV345HauVvcAUnpRuhMMcqTcGOY2+w=="],
 

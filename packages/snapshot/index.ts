@@ -1,5 +1,5 @@
 import { Pool } from 'pg';
-import { SNAPSHOT_URL } from '../config';
+import { SNAPSHOT_URL } from './config';
 
 export const pool = new Pool({
     connectionString: SNAPSHOT_URL

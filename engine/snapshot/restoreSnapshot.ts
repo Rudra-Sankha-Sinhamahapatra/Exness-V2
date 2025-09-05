@@ -1,4 +1,4 @@
-import { pool } from "../database";
+import { pool } from "@exness/snapshotdb";
 import { userBalances } from "../store/balance";
 import { trades } from "../store/trade";
 

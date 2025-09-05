@@ -1,7 +1,7 @@
-import { initDB, pool } from "./database";
+import { initDB, pool } from "@exness/snapshotdb";
 import { redis } from "./redis";
 import { restoreSnapshot } from "./snapshot/restoreSnapshot";
-import { takeSnapshot } from "./snapshot/takeSnapshot";
+import { queueSnapshot } from "./snapshot/queueSnapshot";
 import { latestAssetPrices } from "./store/assetPrice";
 import { listenUserWallet } from "./watcher/balanceWatcher";
 import { listenTrades } from "./watcher/tradesWatcher";
@@ -108,11 +108,9 @@ async function main() {
     }
 
     snapshotInterval = setInterval(async () => {
-      const snapshot = await takeSnapshot();
-      if (snapshot?.id) {
-        console.log(`Snapshot taken at ${new Date().toISOString()}`);
-      }
-    }, 60_000);
+     await queueSnapshot();
+    }, 20000);
+
   } catch (error) {
     console.error("Failed to start engine:", error);
     await redis.quit();

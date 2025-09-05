@@ -1,7 +1,6 @@
-import { pool } from "../database";
+import { redis } from "../redis";
 import { userBalances } from "../store/balance";
 import { trades } from "../store/trade";
-import { v4 as uuidv4 } from "uuid";
 
 function serializeBigInt(obj: any) {
     return JSON.parse(
@@ -11,7 +10,9 @@ function serializeBigInt(obj: any) {
     );
 }
 
-export async function takeSnapshot() {
+const snapshotQueue =  "snapshot_queue";
+
+export async function queueSnapshot() {
     try {
         const openTrades = Array.from(trades.values()).filter(
             (t) => t.status === 'open'
@@ -22,21 +23,22 @@ export async function takeSnapshot() {
         )
 
         const balances = Array.from(userBalances.values());
-         const snapshotId = uuidv4();
 
-                await pool.query(
-            `INSERT INTO snapshots (id, open_orders, closed_orders, balances) 
-             VALUES ($1, $2, $3, $4)`,
-            [
-                snapshotId,
-                JSON.stringify(serializeBigInt(openTrades)),
-                JSON.stringify(serializeBigInt(closedTrades)),
-                JSON.stringify(serializeBigInt(balances))
-            ]
-        );
+         const snapshotData = {
+          openTrades: serializeBigInt(openTrades),
+          closedTrades: serializeBigInt(closedTrades),
+          balances: serializeBigInt(balances)
+         };
+
+         await redis.xadd(
+        snapshotQueue,
+        '*',
+        'data', JSON.stringify(snapshotData)
+         )
+         
 
         // console.log("Snapshot saved:", snapshot.id);
-        return { id: snapshotId };
+        console.log(`Snapshot queued at ${new Date().toISOString()}`);
 
     } catch (error) {
         console.error("Failed to take snapshot: ", error);

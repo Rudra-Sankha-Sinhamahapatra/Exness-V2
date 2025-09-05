@@ -6,7 +6,8 @@
     "server",
     "poller",
     "engine",
-    "frontend"
+    "frontend",
+    "dbProcessor"
   ],
   "scripts": {
     "test:unit": "jest -c tests/jest.config.ts --runInBand tests/unit",

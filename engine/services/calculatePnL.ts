@@ -83,7 +83,7 @@ export function calculatePnL(
                 : currentPriceNormal >= liquidationPrice
 
           console.log('Final calculation:', {
-            pnlInTokens: Number(pnl) / (10 ** decimals),
+            pnlInTokens: Number(pnl) / (10 ** usdcDecimals),
             pnlRaw: pnl.toString(),
             isLiquidated
         });

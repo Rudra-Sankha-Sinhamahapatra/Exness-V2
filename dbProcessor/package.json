@@ -1,25 +1,24 @@
 {
-  "name": "engine",
+  "name": "snapshotprocessor",
   "module": "index.ts",
   "type": "module",
   "private": true,
-  "scripts": {
-    "dev": "bun run --watch index.ts",
-    "start": "bun run index.ts"
-  },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/dotenv": "^8.2.3",
     "@types/ioredis": "^5.0.0"
   },
+  "scripts": {
+    "dev":"bun run --watch index.ts",
+    "start":"bun run index.ts"
+  },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "@exness/db": "workspace:*",
     "@exness/snapshotdb":"workspace:*",
-    "dotenv": "^17.2.1",
+    "dotenv": "^17.2.2",
     "ioredis": "^5.7.0",
-    "uuid": "^11.1.0"
+    "uuid": "^12.0.0"
   }
 }
