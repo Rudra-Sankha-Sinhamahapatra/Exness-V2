@@ -1,3 +1,10 @@
+interface PNL {
+    pnl: number;
+    isLiquidated: boolean
+}
+
+const usdcDecimals = 2;
+
 export function calculatePnL(
     type: 'long' | 'short',
     entryPrice: bigint | number,
@@ -5,39 +12,85 @@ export function calculatePnL(
     margin: bigint | number,
     leverage: number,
     decimals: number
-): bigint {
+): PNL {
      try {
-    const entryPriceBigInt = BigInt(entryPrice);
-    const currentPriceBigInt = BigInt(currentPrice);
-    const marginBigInt = BigInt(margin);
-    const leverageBigInt = BigInt(leverage);
-    const decimalsBigInt = BigInt(10 ** decimals);
-
+    
     console.log('PnL Calculation inputs (after conversion):', {
         type,
-        entryPrice: entryPriceBigInt.toString(),
-        currentPrice: currentPriceBigInt.toString(),
-        margin: marginBigInt.toString(),
-        leverage: leverageBigInt.toString(),
+        entryPrice: entryPrice.toString(),
+        currentPrice: currentPrice.toString(),
+        margin: margin.toString(),
+        leverage: leverage.toString(),
         decimals
     });
-    // asset amount with decimal precison
-    // Example: 5000 USDC position / 45000 USDC/BTC = 0.1111... BTC
-    // We multiply by 10^decimals before division to preserve precision
-    const totalPosition = marginBigInt * leverageBigInt;
-     const assetAmount = (totalPosition * decimalsBigInt) / entryPriceBigInt;
 
-      let pnl: bigint;
-    if (type === 'long') {
-        pnl = ((currentPriceBigInt - entryPriceBigInt) * assetAmount) / decimalsBigInt;
+        const entryPriceNormal = Number(entryPrice) / (10 ** decimals);
+        const currentPriceNormal = Number(currentPrice) / (10 ** decimals);
+        const marginNormal = Number(margin)/(10 ** usdcDecimals);
+        const totalPosition = marginNormal * leverage;
+
+     const assetAmount = totalPosition / entryPriceNormal;
+
+
+     let actualWithoutUserMargin;
+
+      if(type === 'long') {
+     actualWithoutUserMargin = totalPosition - marginNormal;
     } else {
-        pnl = ((entryPriceBigInt - currentPriceBigInt) * assetAmount) / decimalsBigInt;
+        actualWithoutUserMargin = totalPosition + marginNormal;
     }
 
-    console.log('PnL Calculation result:', pnl.toString());
-    return pnl
+     const liquidationPrice = actualWithoutUserMargin / assetAmount;
+     const finalLiquidationPrice = Number(liquidationPrice)
+
+      let pnl:number = 0;
+      let diff;
+      let pnlNormal;
+    if (type === 'long') {
+        // completely liquidated
+       if(currentPriceNormal <= finalLiquidationPrice) {
+        pnl = -Number(margin)
+       } else if(currentPriceNormal < entryPriceNormal && currentPriceNormal > liquidationPrice) {
+        // partial loss
+         diff = entryPriceNormal - currentPriceNormal;
+         pnlNormal = -diff * assetAmount;
+         pnl = Number(Math.round(pnlNormal * (10 ** usdcDecimals)));
+       } else if(currentPriceNormal > entryPriceNormal && currentPriceNormal > liquidationPrice)  {
+        // profit
+        diff = currentPriceNormal - entryPriceNormal;
+        pnlNormal = diff * assetAmount;
+          pnl = Number(Math.round(pnlNormal * (10 ** usdcDecimals)));
+       }
+    } else {
+        // completely liquidated
+        if(currentPriceNormal>= finalLiquidationPrice) {
+            pnl = -Number(margin);
+        } else if (currentPriceNormal > entryPriceNormal && currentPriceNormal < liquidationPrice) {
+            // partial loss
+            diff = currentPriceNormal - entryPriceNormal;
+            pnlNormal = -diff * assetAmount;
+             pnl = Number(Math.round(pnlNormal * (10 ** usdcDecimals)));
+        } else if(currentPriceNormal < entryPriceNormal && currentPriceNormal < liquidationPrice) {
+            // profit
+            diff = entryPriceNormal - currentPriceNormal;
+            pnlNormal = diff * assetAmount;
+             pnl = Number(Math.round(pnlNormal * (10 ** usdcDecimals)));
+        }
+    }
+
+    const  isLiquidated = type === 'long' 
+                ? currentPriceNormal <= liquidationPrice 
+                : currentPriceNormal >= liquidationPrice
+
+          console.log('Final calculation:', {
+            pnlInTokens: Number(pnl) / (10 ** decimals),
+            pnlRaw: pnl.toString(),
+            isLiquidated
+        });
+
+    return {pnl:pnl,isLiquidated:isLiquidated}
 } catch(error) {
     console.error("Failed to calculate PNL: ",error);
-    return BigInt(0);
+    return {pnl:0,isLiquidated:false}
 }
 }

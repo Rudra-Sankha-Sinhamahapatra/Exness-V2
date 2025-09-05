@@ -2,7 +2,7 @@ import { REDIS_RECEIVE_QUEUE } from "../redis";
 
 export async function waitForResponse(
   responseChannel: string,
-  timeoutMs = 10_000
+  timeoutMs = 5000
 ): Promise<unknown> {
   const timeoutSecs = Math.ceil(timeoutMs / 1000);
 

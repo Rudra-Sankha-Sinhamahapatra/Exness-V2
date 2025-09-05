@@ -63,6 +63,14 @@ export async function Processor(event: string | undefined, data: EventData) {
                     throw new Error("Missing trade parameters");
                 }
 
+                const existingAsset = await prisma.asset.findUnique({
+                    where: {symbol: data.asset}
+                });
+
+                if(!existingAsset) {
+                    throw new Error("Invalid asset");
+                }
+
                 const userBalance = getUserBalance(data.email);
                 if (!userBalance) {
                     throw new Error("User balance not found");
@@ -96,16 +104,15 @@ export async function Processor(event: string | undefined, data: EventData) {
                     timestamp: Date.now()
                 })
 
-                const assetRow = await prisma.asset.upsert({
-                    where: { symbol: data.asset },
-                    update: { decimals: itemDecimal },
-                    create: {
-                        symbol: data.asset,
-                        name: data.asset,
-                        imageUrl: "",
-                        decimals: itemDecimal,
-                    },
-                });
+                const assetRow = await prisma.asset.findUnique({
+                    where: {
+                        symbol: data.asset
+                    }
+                })
+
+                if(!assetRow) {
+                    throw new Error("Invalid Asset")
+                }
 
                 const userRow = await prisma.user.upsert({
                     where: { email: data.email },
@@ -153,7 +160,7 @@ export async function Processor(event: string | undefined, data: EventData) {
                 const currentPrice = latestAssetPrices[trade.asset].price;
                 const assetDecimals = latestAssetPrices[trade.asset].decimals;
 
-                const pnl = calculatePnL(
+                const resultPNL = calculatePnL(
                     trade.type,
                     Number(trade.entryPrice),
                     Number(currentPrice),
@@ -161,6 +168,9 @@ export async function Processor(event: string | undefined, data: EventData) {
                     trade.leverage,
                     assetDecimals
                 )
+
+               const pnl = BigInt(resultPNL.pnl);
+                const isLiquidated = resultPNL.isLiquidated;
 
                 if (userBalanceForClose) {
                     if (pnl < 0n) {  // Loss scenario
@@ -175,10 +185,10 @@ export async function Processor(event: string | undefined, data: EventData) {
                             console.log("Trade closed with loss, returning:", remainingMargin.toString());
                         }
                     } else {
-                        // Profit scenario
+                        // Profit or no loss scenario
                         const profitAmount = trade.margin + pnl;
                         userBalanceForClose.usdc.balance += profitAmount;
-                        console.log("Trade closed with profit, returning:", profitAmount.toString());
+                        console.log(`Trade closed with ${pnl===0n?"No profit no loss":"Profit"}, returning:`, profitAmount.toString());
                     }
                     updateUserBalance(data.email, userBalanceForClose)
                 }
@@ -186,7 +196,6 @@ export async function Processor(event: string | undefined, data: EventData) {
                 const closePrice = Number(currentPrice) / 10 ** assetDecimals;
                 const rawPnlFloat = Number(pnl) / Number(10n ** BigInt(userBalanceForClose.usdc.decimals));
                 const pnlFloat = Number(rawPnlFloat.toFixed(2));
-                const isLiquidated = pnl < 0n && (-pnl >= trade.margin);
 
                 await prisma.existingTrade.update({
                     where: {
@@ -203,7 +212,7 @@ export async function Processor(event: string | undefined, data: EventData) {
                     pnl: pnl,
                     isLiquidated
                 };
-                console.log("Trade closed with PnL:", pnl.toString());
+                console.log("Trade closed with PnL:", ((Number(pnl)/ 10 ** 2).toString()));
                 break;
 
             default:
