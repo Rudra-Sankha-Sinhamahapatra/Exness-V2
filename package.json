@@ -15,7 +15,9 @@
     "test:e2e": "bun run test:e2e:setup && jest -c tests/jest.config.ts --runInBand tests/e2e; bun run test:e2e:cleanup"
   },
   "devDependencies": {
+    "@types/dotenv": "^8.2.3",
     "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^24.3.1",
     "@types/supertest": "^6.0.3",
     "ioredis-mock": "^8.9.0",
@@ -25,5 +27,13 @@
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "ws": "^8.18.3"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.15.0",
+    "child_process": "^1.0.2",
+    "dotenv": "^17.2.2",
+    "jsonwebtoken": "^9.0.2",
+    "path": "^0.12.7",
+    "prisma": "^6.15.0"
   }
 }
