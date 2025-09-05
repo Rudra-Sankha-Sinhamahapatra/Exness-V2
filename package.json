@@ -9,9 +9,10 @@
     "frontend"
   ],
   "scripts": {
-    "test": "jest -c tests/jest.config.ts --runInBand",
     "test:unit": "jest -c tests/jest.config.ts --runInBand tests/unit",
-    "test:e2e": "jest -c tests/jest.config.ts --runInBand tests/e2e"
+    "test:e2e:setup": "docker-compose -f tests/docker-compose.yml up -d && sleep 5 && bun run tests/setupDB.ts",
+    "test:e2e:cleanup": "docker-compose -f tests/docker-compose.yml down",
+    "test:e2e": "bun run test:e2e:setup && jest -c tests/jest.config.ts --runInBand tests/e2e; bun run test:e2e:cleanup"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",

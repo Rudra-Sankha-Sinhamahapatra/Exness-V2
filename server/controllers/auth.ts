@@ -42,9 +42,10 @@ export const signup = async (req: Request, res: Response) => {
             message: "Kindly check your mail for the signup link"
         })
         return
-    } catch (error) {
+    } catch (error:any) {
         res.status(500).json({
-            message: "Internal Server error"
+            message: "Internal Server error",
+            error: error
         })
         return;
     }

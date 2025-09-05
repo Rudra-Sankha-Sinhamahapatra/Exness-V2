@@ -34,3 +34,11 @@ jest.mock("../server/authMiddleware", () => {
         }
     }
 })
+
+jest.mock("../engine/store/assetPrice", () => ({
+    latestAssetPrices: {
+        BTC: { price: BigInt(1000000000), decimals: 4 },
+        ETH: { price: BigInt(1000000000), decimals: 6 },
+        SOL: { price: BigInt(1000000000), decimals: 6 },
+    }
+}));
