@@ -5,6 +5,7 @@ import { latestAssetPrices, type Asset } from "../store/assetPrice";
 import { getUserBalance, initializeBalance, updateUserBalance } from "../store/balance";
 import { closeTrade, createTrade, getTrade } from "../store/trade";
 import { queueDBOperation } from "../services/queueDb"
+import { calculateLiquidationPrice } from "../services/calculateLiquidationPrice";
 
 type EventData = {
     email: string;
@@ -92,6 +93,15 @@ export async function Processor(event: string | undefined, data: EventData) {
                 userBalance.usdc.balance -= marginBigInt;
                 updateUserBalance(data.email, userBalance);
 
+
+                const liquidationPrice = calculateLiquidationPrice(
+                    data.type,
+                    entryPrice,
+                    marginBigInt,
+                    data.leverage,
+                    itemDecimal
+                )
+
                 result = createTrade({
                     orderId: data.orderId,
                     email: data.email,
@@ -102,8 +112,11 @@ export async function Processor(event: string | undefined, data: EventData) {
                     entryPrice: entryPrice,
                     slippage: data.slippage || 0,
                     status: 'open',
-                    timestamp: Date.now()
-                })
+                    timestamp: Date.now(),
+                    liquidationPrice: liquidationPrice
+                });
+
+                console.log(`Liquidation price: ${Number(liquidationPrice) / (10 ** itemDecimal)}`);
 
                 const assetRow = await prisma.asset.findUnique({
                     where: {
@@ -160,7 +173,8 @@ export async function Processor(event: string | undefined, data: EventData) {
                     Number(currentPrice),
                     Number(trade.margin),
                     trade.leverage,
-                    assetDecimals
+                    assetDecimals,
+                    trade.liquidationPrice ? Number(trade.liquidationPrice) : undefined
                 )
 
                 const pnl = BigInt(resultPNL.pnl);

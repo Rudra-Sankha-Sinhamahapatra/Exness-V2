@@ -2,10 +2,11 @@ import { initDB, pool } from "@exness/snapshotdb";
 import { redis } from "./redis";
 import { restoreSnapshot } from "./snapshot/restoreSnapshot";
 import { queueSnapshot } from "./snapshot/queueSnapshot";
-import { latestAssetPrices } from "./store/assetPrice";
+import { latestAssetPrices, type Asset } from "./store/assetPrice";
 import { listenUserWallet } from "./watcher/balanceWatcher";
 import { listenTrades } from "./watcher/tradesWatcher";
 import { prisma } from "@exness/db";
+import { checkLiquidations } from "./services/checkLiquidation";
 
 interface assetUpdate {
   asset: string;
@@ -71,6 +72,8 @@ async function startPriceListener() {
               };
               // console.log("price updated");
               // console.log(latestAssetPrices)
+
+              checkLiquidations(u.asset as Asset, BigInt(u.price))
             }
           }
 

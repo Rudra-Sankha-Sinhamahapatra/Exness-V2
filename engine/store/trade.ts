@@ -11,6 +11,7 @@ export interface Trade {
     entryPrice: bigint;
     status: 'open' | 'closed';
     timestamp: number;
+    liquidationPrice?: bigint
 }
 
 export const trades = new Map<string, Trade>();
