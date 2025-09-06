@@ -110,7 +110,7 @@ async function main() {
 
     snapshotInterval = setInterval(async () => {
      await queueSnapshot();
-    }, 20000);
+    }, 10000);
 
   } catch (error) {
     console.error("Failed to start engine:", error);

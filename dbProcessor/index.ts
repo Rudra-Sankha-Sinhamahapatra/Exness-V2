@@ -13,8 +13,8 @@ while(!isShuttingDown) {
     try {
         const res = await redis.xreadgroup(
             "GROUP",GROUP,CONSUMER,
-            "COUNT", 60,
-            "BLOCK", 600,
+            "COUNT", 500,
+            "BLOCK", 100,
             "STREAMS",
             OPERATIONS_STREAM, SNAPSHOT_STREAM,
             ">", ">"
