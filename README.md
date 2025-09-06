@@ -177,7 +177,7 @@ POST /api/v1/trade/create
   "type": "long" | "short",              // Required: Trade Type
   "margin": number,                      // Required: Must be > 0
   "leverage": number,                    // Required: 1-100 range
-  "slippage": number                     
+  "slippage": number                     // Optional: 10-10000 (in range)) 100 means 1%
 }
 ```
 
@@ -186,11 +186,83 @@ POST /api/v1/trade/create
 - Asset must be SOL, ETH, or BTC
 - Type must be 'long' or 'short'
 - Leverage must be between 1 and 100
+- Slippage must be between 0.1% and 100% (if provided)
 - User must be authenticated
+
+**Slippage Protection:**
+- Prevents trades from executing at prices worse than expected
+- Value is in percentage (100 = 1%)
+- Example: 
+  - Slippage of 100 = 1% maximum price movement allowed
+  - If price moves more than specified percentage, trade is rejected
+- Optional parameter - if not provided, no slippage check is performed
 
 **Auto-Liquidation:**
 - Liquidation price calculated on trade creation
 - Real-time monitoring on every price update
 - Automatic trade closure when liquidation price reached
 - Zero balance return on complete liquidation
+
+### Price Management & Trade Execution
+
+**Price Storage in Redis:**
+- Engine stores latest prices in Redis KV store
+- Key format: `price-{ASSET}` (e.g. `price-SOL`)
+- Value format: `{ price: string, decimal: number }`
+- 30-second TTL to prevent stale prices
+- Example:
+```json
+{
+    "price": "50000000000",  // Price with decimals
+    "decimal": 6             // Decimal places
+}
+```
+
+**Trade Price Validation Flow:**
+1. **Price Update:**
+   - Engine receives price updates from WebSocket
+   - Stores in Redis with 30s expiry
+   - Format: `redis.set(price-BTC, priceData, 'EX', 30)`
+
+2. **Trade Request:**
+   - Server checks current price from Redis KV
+   - Verifies price exists and hasn't expired
+   - Example: `redis.get(price-${asset})`
+
+3. **Slippage Check:**
+   - Server gets price: `priceFromRedis`
+   - Engine executes at: `executionPrice`
+   - Calculates deviation: `|executionPrice - priceFromRedis| / priceFromRedis * 100`
+   - Rejects if deviation > allowed slippage
+
+**Example Flow:**
+```typescript
+// 1. Price Update (in Engine)
+const priceUpdate = {
+    asset: "SOL",
+    price: "20150000000",
+    decimal: 6
+}
+await redis.set(`price-SOL`, JSON.stringify(priceUpdate), 'EX', 30)
+
+// 2. Trade Request (in Server)
+const currentPrice = await redis.get(`price-SOL`)
+// Price: 201.50 USDC
+
+// 3. Engine Execution
+const executionPrice = 202.50 // USDC
+const deviation = Math.abs(202.50 - 201.50) / 201.50 * 100
+// Deviation = 0.497%
+
+// 4. Slippage Check
+if (deviation > allowedSlippage) {
+    throw new Error("Price slippage too high")
+}
+```
+
+This price management system ensures:
+- Real-time price updates
+- No stale prices (30s TTL)
+- Price deviation protection
+- Accurate slippage calculations
 
