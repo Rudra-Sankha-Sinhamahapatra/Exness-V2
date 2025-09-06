@@ -11,10 +11,22 @@ jest.mock("../server/resend", () => ({
 // mocking server's redis clients 
 jest.mock("../server/redis", () => {
     const mockClient = new(Redis as any)();
+
+     const mockPrices: { [key: string]: string } = {
+        'price-BTC': JSON.stringify({ price: "50000000000", decimal: 4 }),
+        'price-ETH': JSON.stringify({ price: "3000000000", decimal: 6 }),
+        'price-SOL': JSON.stringify({ price: "200000000", decimal: 6 })
+    };
+
+    mockClient.get = jest.fn().mockImplementation((key:string) => {
+        return Promise.resolve(mockPrices[key] || null)
+    })
+    
     return {
+    redis: mockClient,
     REDIS_PUSH_QUEUE: mockClient,
     REDIS_RECEIVE_QUEUE: mockClient,
-    REDIS_URL: "redis://localhost:6379"
+    REDIS_URL: "redis://localhost:6381"
     }
 })
 

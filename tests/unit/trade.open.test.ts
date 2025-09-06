@@ -13,7 +13,7 @@ describe('POST /api/v1/trade/create', () => {
 
         const res = await request(app)
             .post("/api/v1/trade/create")
-            .send({ asset: "BTC", type: "long", margin: 1000, leverage: 5, slippage: 1 });
+            .send({ asset: "BTC", type: "long", margin: 1000, leverage: 5, slippage: 20 });
 
         expect(res.status).toBe(200);
         expect(res.body.orderId).toBeDefined();
@@ -27,7 +27,7 @@ describe('POST /api/v1/trade/create', () => {
 
         const res = await request(app)
             .post("/api/v1/trade/create")
-            .send({ asset: "ETH", type: "short", margin: 100, leverage: 2, slippage: 1 });
+            .send({ asset: "ETH", type: "short", margin: 100, leverage: 2, slippage: 17 });
 
         expect(res.status).toBe(500);
         expect(res.body.error).toBe("Trade failed");
@@ -39,7 +39,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when margin is less than 1", async () => {
             const res = await request(app)
                 .post('/api/v1/trade/create')
-                .send({ asset: "BTC", type: "long", margin: 99, leverage: 5, slippage: 1 });
+                .send({ asset: "BTC", type: "long", margin: 99, leverage: 5, slippage: 16 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -49,7 +49,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when margin is negative", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "long", margin: -1, leverage: 10, slippage: 1 });
+                .send({ asset: "BTC", type: "long", margin: -1, leverage: 10, slippage: 19 });
 
             expect(res.status).toBe(400)
             expect(res.body.success).toBe(false)
@@ -64,7 +64,7 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "SOL", type: "long", margin: 100, leverage: 5, slippage: 1 });
+                .send({ asset: "SOL", type: "long", margin: 100, leverage: 5, slippage: 20 });
 
             expect(res.status).toBe(200);
             expect(res.body.orderId).toBeDefined();
@@ -78,7 +78,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when asset is invalid", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "DOGE", type: "long", margin: 100, leverage: 5, slippage: 1 });
+                .send({ asset: "DOGE", type: "long", margin: 100, leverage: 5, slippage: 34 });
 
             expect(res.status).toBe(400)
             expect(res.body.message).toBe(message)
@@ -88,7 +88,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when asset is lowercase", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "btc", type: "long", margin: 100, leverage: 5, slippage: 1 });
+                .send({ asset: "btc", type: "long", margin: 100, leverage: 5, slippage: 43 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -98,7 +98,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when asset is empty", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "", type: "long", margin: 100, leverage: 5, slippage: 1 });
+                .send({ asset: "", type: "long", margin: 100, leverage: 5, slippage: 18 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -113,7 +113,7 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "SOL", type: "long", margin: 100, leverage: 5, slippage: 1 });
+                .send({ asset: "SOL", type: "long", margin: 100, leverage: 5, slippage: 24 });
 
             expect(res.status).toBe(200);
             expect(res.body.orderId).toBeDefined();
@@ -124,7 +124,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when trade type is invalid", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "buy", margin: 100, leverage: 5, slippage: 1});
+                .send({ asset: "BTC", type: "buy", margin: 100, leverage: 5, slippage: 12 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -134,7 +134,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when trade type is empty", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "", margin: 100, leverage: 5, slippage: 1});
+                .send({ asset: "BTC", type: "", margin: 100, leverage: 5, slippage: 12 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -144,7 +144,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when trade type is uppercase", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "LONG", margin: 100, leverage: 5, slippage: 1});
+                .send({ asset: "BTC", type: "LONG", margin: 100, leverage: 5, slippage: 12 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -159,18 +159,43 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "short", margin: 100, leverage: 5, slippage: 1});
+                .send({ asset: "BTC", type: "short", margin: 100, leverage: 5, slippage: 12 });
 
             expect(res.status).toBe(200);
         });
 
     });
 
+    describe('Slippage validation', () => {
+        const message = "Slippage value should be between 0.1 to 100 %";
+
+        it("400 when Slippage is less than 0.1%", async () => {
+                     const res = await request(app)
+                .post("/api/v1/trade/create")
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 6, slippage: 9});
+
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
+            expect(res.body.message).toBe(message);
+        })
+
+           it("400 when Slippage is greater than 100%", async () => {
+                     const res = await request(app)
+                .post("/api/v1/trade/create")
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 6, slippage: 10001});
+
+            expect(res.status).toBe(400);
+            expect(res.body.success).toBe(false);
+            expect(res.body.message).toBe(message);
+        })
+
+    })
+
       describe('Leverage Validation', () => {
         it("400 when leverage is less than 1", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "long", margin: 100, leverage: 0, slippage: 1});
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 0, slippage: 12 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -180,7 +205,7 @@ describe('POST /api/v1/trade/create', () => {
         it("400 when leverage is greater than 100", async () => {
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "long", margin: 100, leverage: 101, slippage: 1});
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 101, slippage: 18 });
 
             expect(res.status).toBe(400);
             expect(res.body.success).toBe(false);
@@ -195,7 +220,7 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "long", margin: 100, leverage: 1, slippage: 1});
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 1, slippage: 18 });
 
             expect(res.status).toBe(200);
         });
@@ -208,7 +233,7 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
                 .post("/api/v1/trade/create")
-                .send({ asset: "BTC", type: "long", margin: 100, leverage: 100, slippage: 1});
+                .send({ asset: "BTC", type: "long", margin: 100, leverage: 100, slippage: 26 });
 
             expect(res.status).toBe(200);
         });
@@ -221,7 +246,7 @@ describe('POST /api/v1/trade/create', () => {
 
             const res = await request(app)
             .post("/api/v1/trade/create")
-            .send({ asset: "BTC", type: "long", margin: 100, leverage: 50, slippage: 1});
+            .send({ asset: "BTC", type: "long", margin: 100, leverage: 50, slippage: 28 });
 
             expect(res.status).toBe(200)
             expect(res.body.orderId).toBeDefined()

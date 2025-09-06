@@ -120,7 +120,7 @@ describe("E2E: poller + engine + api", () => {
                 type: "long",
                 margin: 1000,
                 leverage: 2,
-                slippage: 2
+                slippage: 20
             });
 
         console.log('Create trade response:', res.body);
