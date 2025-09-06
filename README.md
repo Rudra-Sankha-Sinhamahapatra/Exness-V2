@@ -12,6 +12,7 @@ This ensures high-throughput, low-latency communication between services, while 
 * **Server**
   Express.js backend that exposes HTTP APIs for user requests (balances, trades, wallet initialization).
   Communicates with the Engine using Redis **queues**.
+  Performs direct reads from Main DB for authentication and asset validation.
 
 * **Engine**
   Core trading engine that:
@@ -19,15 +20,25 @@ This ensures high-throughput, low-latency communication between services, while 
   * Maintains in-memory state (asset prices, balances, trades)
   * Processes all trade and wallet requests from the Server (via Redis queues)
   * Consumes real-time price updates from Redis **streams**
-  * Periodically snapshots state into PostgreSQL for persistence
+  * Queues write operations to DB Processor via Redis streams
+  * Restores state from snapshots on startup
+
+* **DB Processor**
+  Dedicated database write service that:
+
+  * Consumes write operations from Redis streams
+  * Handles trade creation/updates in Main DB
+  * Processes snapshot data and writes to Snapshot DB
+  * Provides batch processing for high-throughput scenarios
 
 * **Price Poller**
   Connects to Backpack WebSocket API to fetch live prices.
   Batches updates and pushes them into Redis **streams** (`price_stream`).
 
 * **Database (PostgreSQL)**
-  Used to persist snapshots of engine state (balances, open/closed trades).
-  Allows engine recovery on restart.
+  
+  * **Main DB**: Stores users, trades, and assets using Prisma ORM
+  * **Snapshot DB**: Stores periodic snapshots of engine state for recovery
 
 * **Redis**
 
@@ -38,32 +49,36 @@ This ensures high-throughput, low-latency communication between services, while 
   * **Streams**:
 
     * `price_stream`: high-frequency price updates from poller to engine
+    * `db_operations_queue`: write operations from engine to DB processor
+    * `snapshot_queue`: snapshot data from engine to DB processor
 
 ### Data Flow
 
-1. **Server → Engine (RPC)**
+1. **Server → Engine (RPC via Redis Queues)**
+   * Server receives user requests (trade execution, wallet operations)
+   * Pushes request into Redis **queue** (`trade_stream`, `user_wallet_stream`) with unique response channel
+   * Engine consumes, processes, and pushes results back to response queue
 
-   * Server receives user requests (trade execution, wallet operations).
-   * Pushes request into a Redis **queue** with a unique response channel.
-   * Engine consumes, processes, and pushes results back to response queue.
+2. **Price Poller → Engine (Streaming via WebSocket + Redis)**
+   * Poller connects to Backpack **WebSocket** feed (not REST API)
+   * Publishes batched price updates into Redis **streams** (`price_stream`)
+   * Engine consumes stream updates with consumer groups for reliability
 
-2. **Price Poller → Engine (Streaming)**
+3. **Engine → DB Processor (Async Write Operations)**
+   * Engine queues trade operations to `db_operations_queue` stream
+   * Engine queues snapshots to `snapshot_queue` stream
+   * DB Processor consumes from both streams concurrently
+   * Separates Main DB writes (trades) from Snapshot DB writes (state recovery)
 
-   * Poller subscribes to Backpack WebSocket feed.
-   * Publishes batched price updates into Redis **streams**.
-   * Engine consumes stream updates with consumer groups for reliability.
+4. **Engine State & Persistence**
+   * Engine holds in-memory state for ultra-low latency
+   * Periodically queues snapshots every 20 seconds via Redis streams
+   * On restart, Engine restores state from latest snapshot in Snapshot DB
 
-3. **Engine State & Persistence**
-
-   * Engine holds in-memory state for ultra-low latency.
-   * Periodically takes snapshots of trades/balances and writes them into PostgreSQL.
-   * On restart, Engine restores its state from the latest snapshot.
-
-4. **Server & DB , Engine & DB**
-     
-   * During Signup We store user details on DB, signin we check existing Check
-   * The Assets which are supported in our platform we store on DB
-   * During create trades we insert data on DB, closed trades we update data on DB
+5. **Database Operations**
+   * **Server Direct Reads**: Authentication, asset validation (immediate response needed)
+   * **DB Processor Writes**: Trade creation/updates, user creation, snapshots (async)
+   * **Engine Startup**: Snapshot restoration from Snapshot DB
 
 ---
 
