@@ -26,6 +26,7 @@ describe("E2E: poller + engine + api", () => {
     let poller: ChildProcess | null = null;
     let engine: ChildProcess | null = null;
     let api: ChildProcess | null = null;
+    let startDBProcessor: ChildProcess | null = null;
     let agent: request.Agent;
     let prisma: PrismaClient;
 
@@ -55,6 +56,13 @@ describe("E2E: poller + engine + api", () => {
 
         await wait(2000);
 
+        startDBProcessor = spawn("bun", ["run", "dbProcessor/index.ts"], {
+        env: testEnv,
+        stdio: "inherit",
+        });
+
+        await wait(2000);
+
         engine = spawn("bun", ["run", "engine/index.ts"], {
             env: testEnv,
             stdio: 'inherit',
@@ -77,6 +85,8 @@ describe("E2E: poller + engine + api", () => {
         poller?.kill?.('SIGTERM');
         engine?.kill?.('SIGTERM');
         api?.kill?.('SIGTERM');
+        startDBProcessor?.kill('SIGTERM');
+        
         await prisma?.$disconnect();
         ;
         await wait(1000);
