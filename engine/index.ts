@@ -70,6 +70,11 @@ async function startPriceListener() {
                 price: BigInt(u.price),
                 decimals: u.decimals,
               };
+              // console.log("u: ", u);
+              await redis.set(`price-${u.asset}`, JSON.stringify({
+                price: u.price,
+                timestamp: Date.now()
+              }), 'EX', 30);
               // console.log("price updated");
               // console.log(latestAssetPrices)
 
@@ -112,7 +117,7 @@ async function main() {
     }
 
     snapshotInterval = setInterval(async () => {
-     await queueSnapshot();
+      await queueSnapshot();
     }, 10000);
 
   } catch (error) {

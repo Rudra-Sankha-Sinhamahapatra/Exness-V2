@@ -17,6 +17,7 @@ type EventData = {
     margin?: number;
     leverage?: number;
     slippage?: number;
+    currentPrice?: bigint;
 }
 
 function serializeBigInt(data: any): string {
@@ -83,8 +84,30 @@ export async function Processor(event: string | undefined, data: EventData) {
                     throw new Error("Insufficient margin");
                 }
 
+                // server price
+                const currentPriceBigInt = BigInt(data.currentPrice!);
+
+                // engine current price
                 const entryPrice = latestAssetPrices[data.asset as Asset].price;
+
+                console.log("Server price :", currentPriceBigInt, " Engine price: ", entryPrice);
+                const slippage = data.slippage;
+
                 const itemDecimal = latestAssetPrices[data.asset as Asset].decimals;
+
+                if (slippage) {
+                    const currentPriceFloat = Number(currentPriceBigInt) / (10 ** itemDecimal);
+                    const entryPriceFloat = Number(entryPrice) / (10 ** itemDecimal);
+
+                    const actualSlippageBps = Math.abs((currentPriceFloat - entryPriceFloat) / entryPriceFloat) * 10000;
+
+                    console.log(`Slippage check - Actual: ${(actualSlippageBps / 100).toFixed(2)}%, Allowed: ${(slippage / 100).toFixed(2)}%`);
+
+                    if (actualSlippageBps > slippage) {
+                        throw new Error(`Slippage exceeded: ${(actualSlippageBps / 100).toFixed(2)}% > ${(slippage / 100).toFixed(2)}%`);
+                    }
+                }
+
 
                 if (entryPrice === undefined || entryPrice === null) {
                     throw new Error("Asset price not available");

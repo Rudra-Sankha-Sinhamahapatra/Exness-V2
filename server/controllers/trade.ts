@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { REDIS_PUSH_QUEUE } from "../redis";
+import { redis, REDIS_PUSH_QUEUE } from "../redis";
 import { v4 as uuidv4 } from "uuid";
 import { waitForResponse } from "../utils/waitForResponse";
 
@@ -65,6 +65,26 @@ export const createTrade = async (req: Request, res: Response) => {
             return;
         }
 
+        if(tradeData.slippage>10000 || tradeData.slippage < 10) {
+                res.status(400).json({
+                success: false,
+                message: "Slippage value should be between 0.1 to 100 %"
+            })
+            return;
+        }
+
+      const currentPrice =  await redis.get(`price-${tradeData.asset}`);
+
+      console.log("Current server price: ", currentPrice);
+        if (!currentPrice) {
+            res.status(400).json({
+                success: false,
+                message: "Current price not available for the selected asset"
+            });
+            return;
+        }
+        const tradeTimeVal = JSON.parse(currentPrice);
+
         const responseId = uuidv4();
         const responseChannel = `trade_response_${responseId}`;
         const orderId = uuidv4();
@@ -73,6 +93,7 @@ export const createTrade = async (req: Request, res: Response) => {
 
         await REDIS_PUSH_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
             email,
+            currentPrice:  tradeTimeVal.price,
             event: QUEUE_EVENT,
             responseChannel,
             orderId,
