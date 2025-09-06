@@ -29,6 +29,7 @@
     "dbProcessor": {
       "name": "snapshotprocessor",
       "dependencies": {
+        "@exness/db": "workspace:*",
         "@exness/snapshotdb": "workspace:*",
         "dotenv": "^17.2.2",
         "ioredis": "^5.7.0",

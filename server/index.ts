@@ -3,6 +3,7 @@ import cors from "cors"
 import allRoutes from "./routes/routes";
 import cookieParser from "cookie-parser";
 import { PORT } from "./config";
+import { prisma } from "@exness/db";
 
 const app = express();
 
@@ -20,3 +21,17 @@ app.use(cors())
 app.listen(PORT, async () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 })
+
+process.on('SIGINT', async () => {
+    console.log('Shutting down Server...');
+    try {
+        await Promise.all([
+            prisma.$disconnect()
+        ]);
+        console.log('Server closed');
+        process.exit(0);
+    } catch (error) {
+        console.error('Server error:', error);
+        process.exit(1);
+    }
+});

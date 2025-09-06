@@ -4,6 +4,7 @@ import { calculatePnL } from "../services/calculatePnL";
 import { latestAssetPrices, type Asset } from "../store/assetPrice";
 import { getUserBalance, initializeBalance, updateUserBalance } from "../store/balance";
 import { closeTrade, createTrade, getTrade } from "../store/trade";
+import { queueDBOperation } from "../services/queueDb"
 
 type EventData = {
     email: string;
@@ -64,10 +65,10 @@ export async function Processor(event: string | undefined, data: EventData) {
                 }
 
                 const existingAsset = await prisma.asset.findUnique({
-                    where: {symbol: data.asset}
+                    where: { symbol: data.asset }
                 });
 
-                if(!existingAsset) {
+                if (!existingAsset) {
                     throw new Error("Invalid asset");
                 }
 
@@ -110,27 +111,20 @@ export async function Processor(event: string | undefined, data: EventData) {
                     }
                 })
 
-                if(!assetRow) {
+                if (!assetRow) {
                     throw new Error("Invalid Asset")
                 }
 
-                const userRow = await prisma.user.upsert({
-                    where: { email: data.email },
-                    update: {},
-                    create: { email: data.email },
-                });
-
                 const openPrice = Number(entryPrice) / 10 ** itemDecimal;
 
-                await prisma.existingTrade.create({
-                    data: {
-                        orderId: data.orderId!,
-                        openPrice,
-                        leverage: data.leverage!,
-                        liquidated: false,
-                        asset: { connect: { id: assetRow.id } },
-                        user: { connect: { id: userRow.id } },
-                    }
+                await queueDBOperation('CREATE_TRADE', {
+                    orderId: data.orderId,
+                    email: data.email,
+                    asset: data.asset,
+                    openPrice,
+                    leverage: data.leverage,
+                    liquidated: false,
+                    assetId: existingAsset.id
                 })
 
                 console.log('Trade executed:', result);
@@ -169,7 +163,7 @@ export async function Processor(event: string | undefined, data: EventData) {
                     assetDecimals
                 )
 
-               const pnl = BigInt(resultPNL.pnl);
+                const pnl = BigInt(resultPNL.pnl);
                 const isLiquidated = resultPNL.isLiquidated;
 
                 if (userBalanceForClose) {
@@ -188,7 +182,7 @@ export async function Processor(event: string | undefined, data: EventData) {
                         // Profit or no loss scenario
                         const profitAmount = trade.margin + pnl;
                         userBalanceForClose.usdc.balance += profitAmount;
-                        console.log(`Trade closed with ${pnl===0n?"No profit no loss":"Profit"}, returning:`, profitAmount.toString());
+                        console.log(`Trade closed with ${pnl === 0n ? "No profit no loss" : "Profit"}, returning:`, profitAmount.toString());
                     }
                     updateUserBalance(data.email, userBalanceForClose)
                 }
@@ -197,22 +191,19 @@ export async function Processor(event: string | undefined, data: EventData) {
                 const rawPnlFloat = Number(pnl) / Number(10n ** BigInt(userBalanceForClose.usdc.decimals));
                 const pnlFloat = Number(rawPnlFloat.toFixed(2));
 
-                await prisma.existingTrade.update({
-                    where: {
-                        orderId: data.orderId!
-                    },
-                    data: {
-                        closePrice,
-                        pnl: pnlFloat,
-                        liquidated: isLiquidated
-                    }
-                })
+                await queueDBOperation('UPDATE_TRADE', {
+                    orderId: data.orderId,
+                    closePrice: closePrice,
+                    pnl: pnlFloat,
+                    liquidated: isLiquidated
+                });
+
                 result = {
                     ...closeTrade(data.orderId),
                     pnl: pnl,
                     isLiquidated
                 };
-                console.log("Trade closed with PnL:", ((Number(pnl)/ 10 ** 2).toString()));
+                console.log("Trade closed with PnL:", ((Number(pnl) / 10 ** 2).toString()));
                 break;
 
             default:

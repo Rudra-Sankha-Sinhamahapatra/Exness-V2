@@ -5,6 +5,7 @@ import { queueSnapshot } from "./snapshot/queueSnapshot";
 import { latestAssetPrices } from "./store/assetPrice";
 import { listenUserWallet } from "./watcher/balanceWatcher";
 import { listenTrades } from "./watcher/tradesWatcher";
+import { prisma } from "@exness/db";
 
 interface assetUpdate {
   asset: string;
@@ -137,7 +138,8 @@ process.on('SIGINT', async () => {
 
     await Promise.all([
       redis.quit(),
-      pool.end()
+      pool.end(),
+      prisma.$disconnect
     ]);
 
     console.log('Connections closed');
