@@ -128,7 +128,7 @@ Sophisticated profit/loss calculation with:
 
   * Node.js + Express.js
   * Bun Runtime
-  * Redis (Queues + Streams)
+  * Redis (Queues + Streams + KV Store)
   * PostgreSQL (With Prisma ORM for main DB , Pg library for snapshots)
   * Resend (For Mailing)
   * Jest & Supertest(for testing)
