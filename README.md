@@ -67,7 +67,7 @@ The engine automatically liquidates trades when the liquidation price is reached
 * **Zero Return**: Liquidated users receive 0 balance (total margin loss)
 * **Database Logging**: All liquidations are recorded with detailed PnL information
 
-<img src="./docs/images/auto-liquidation.png" alt="Auto-Liquidation in Action" width="600"/>
+<img src="./docs/images/autoliquidation.png" alt="Auto-Liquidation in Action" width="600"/>
 
 *Example: A long position with 3700x leverage getting auto-liquidated when SOL price dropped from 201.47 to 201.20*
 
@@ -174,10 +174,10 @@ Sophisticated profit/loss calculation with:
 POST /api/v1/trade/create
 {
   "asset": "SOL" | "ETH" | "BTC",        // Required: Supported assets only
-  "type": "long" | "short",              // Required: Position direction
+  "type": "long" | "short",              // Required: Trade Type
   "margin": number,                      // Required: Must be > 0
   "leverage": number,                    // Required: 1-100 range
-  "slippage": number                     // Required: Slippage tolerance
+  "slippage": number                     
 }
 ```
 
