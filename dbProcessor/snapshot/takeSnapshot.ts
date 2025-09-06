@@ -1,14 +1,5 @@
 import { pool } from "@exness/snapshotdb";
 import { v4 as uuidv4 } from "uuid";
-import { GROUP, redis, STREAM } from "../redis";
-
-export async function ensureGroup() {
- try {
-    await redis.xgroup("CREATE",STREAM,GROUP,'$','MKSTREAM');
- } catch (e:any) {
-    if (!String(e?.message || e).includes("BUSYGROUP")) throw e;
- }
-}
 
 export async function takeSnapshot(data:any) {
     try {

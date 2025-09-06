@@ -1,50 +1,58 @@
 import { initDB, pool } from "@exness/snapshotdb";
-import { CONSUMER,GROUP, redis, STREAM } from "./redis";
-import { ensureGroup, takeSnapshot } from "./snapshot/takeSnapshot";
+import { CONSUMER,GROUP, OPERATIONS_STREAM, redis, SNAPSHOT_STREAM } from "./redis";
+import { takeSnapshot } from "./snapshot/takeSnapshot";
+import { ensureGroup } from "./services/redisStreams";
+import { processDBOperation } from "./services/processDB";
+import { prisma }from "@exness/db"
 
 let isShuttingDown = false;
 
-async function startSnapshotProcessor() {
-    await ensureGroup();
+async function startDBProcessor() {
+await ensureGroup();    
+while(!isShuttingDown) {
+    try {
+        const res = await redis.xreadgroup(
+            "GROUP",GROUP,CONSUMER,
+            "COUNT", 60,
+            "BLOCK", 600,
+            "STREAMS",
+            OPERATIONS_STREAM, SNAPSHOT_STREAM,
+            ">", ">"
+        ) as any;
 
-    while(!isShuttingDown) {
-        try {
-            const res = await redis.xreadgroup(
-                'GROUP', GROUP, CONSUMER,
-                'COUNT', 10,
-                'BLOCK', 100,
-                'STREAMS', STREAM,
-                '>'
-            )as any;
+        if(!res) continue;
 
-            if(!res) continue;
-
-
-            for(const [,entries] of res) {
-              for(const [id,fields] of entries) {
+        for (const [stream,entries] of res) {
+            for (const [id, fields] of entries) {
                 try {
-                    const data = JSON.parse(fields[1]);
-                    await takeSnapshot(data);
-                    await redis.xack(STREAM,GROUP,id);
-                } catch (error) {
-                     console.error("Failed to process snapshot entry:", error);
-                     await redis.xack(STREAM, GROUP, id);
-                }
-              }
-            }
+                    if(stream === OPERATIONS_STREAM) {
+                        const operation = fields[1];
+                        const data = JSON.parse(fields[3]);
+                        await processDBOperation(operation,data);
+                    } else if (stream === SNAPSHOT_STREAM) {
+                        const data = JSON.parse(fields[1]);
+                        await takeSnapshot(data)
+                    }
 
-        } catch (error) {
-            console.error("Error in snapshot processor:", error);
-            await new Promise(resolve => setTimeout(resolve, 5000));
+                    await redis.xack(stream,GROUP,id);
+                } catch (error) {
+                      console.error(`Failed to process ${stream} entry:`, error);
+                      await redis.xack(stream, GROUP, id);
+                }
+            }
         }
+    } catch (error) {
+        console.error("Error in DB processor:", error);
+        await new Promise(resolve => setTimeout(resolve, 5000));
     }
+}
 }
 
 async function main() {
     try {
-            await initDB();
+        await initDB();
         console.log("Starting snapshot processor...");
-        await startSnapshotProcessor();
+        await startDBProcessor();
     } catch (error) {
         console.error("Failed to start snapshot processor:", error);
         process.exit(1);
@@ -57,7 +65,8 @@ process.on('SIGINT', async () => {
         isShuttingDown = true;
         await Promise.all([
             redis.quit(),
-            pool.end()
+            pool.end(),
+            prisma.$disconnect
         ]);
         console.log('Snapshot processor connections closed');
         process.exit(0);
