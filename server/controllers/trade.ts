@@ -33,6 +33,38 @@ export const createTrade = async (req: Request, res: Response) => {
         }
 
         const tradeData: CreateTradeRequest = req.body;
+        if(tradeData.margin<=99) {
+            res.status(400).json({
+                success: false,
+                message: "Margin must be greater than 0.99"
+            })
+            return;
+        }
+
+        if(!['SOL', 'ETH', 'BTC'].includes(tradeData.asset)) {
+            res.status(400).json({
+                success: false,
+                message: "Invalid asset. Supported assets are SOL, ETH, BTC"
+            })
+            return;
+        }
+
+        if(!['long', 'short'].includes(tradeData.type)) {
+            res.status(400).json({
+                success: false,
+                message: "Invalid trade type. Supported types are long and short"
+            })
+            return;
+        }
+
+        if(tradeData.leverage<1 || tradeData.leverage>100) {
+            res.status(400).json({
+                success: false,
+                message: "Leverage must be between 1 and 100"
+            })
+            return;
+        }
+
         const responseId = uuidv4();
         const responseChannel = `trade_response_${responseId}`;
         const orderId = uuidv4();
