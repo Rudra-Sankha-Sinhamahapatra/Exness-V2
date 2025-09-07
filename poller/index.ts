@@ -18,20 +18,21 @@ ws.on('open', () => {
                 id: Id++,
             },
 
-            {
-                method: "SUBSCRIBE",
-                params: [`depth.200ms.${asset}`],
-                id: Id++
-            },
+            // {
+            //     method: "SUBSCRIBE",
+            //     params: [`depth.200ms.${asset}`],
+            //     id: Id++
+            // },
             
-            {
-                method: "SUBSCRIBE",
-                params: [`trade.${asset}`],
-                id: Id++
-            }
+            // {
+            //     method: "SUBSCRIBE",
+            //     params: [`trade.${asset}`],
+            //     id: Id++
+            // }
 
         ];
 
+        // console.log(subscribeMessages)
         subscribeMessages.forEach((msg) => {
             ws.send(JSON.stringify(msg));
             // console.log("Sent:", msg);
