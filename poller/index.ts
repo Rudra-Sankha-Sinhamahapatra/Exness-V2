@@ -17,12 +17,13 @@ ws.on('open', () => {
                 params: [`bookTicker.${asset}`],
                 id: Id++,
             },
+
             {
                 method: "SUBSCRIBE",
                 params: [`depth.200ms.${asset}`],
                 id: Id++
             },
-
+            
             {
                 method: "SUBSCRIBE",
                 params: [`trade.${asset}`],
@@ -46,12 +47,20 @@ ws.on("message", (msg) => {
 
         if (parsedMsg?.data?.e === 'bookTicker') {
             const symbol = parsedMsg.data.s;
-            const price = parseFloat(parsedMsg.data.a);
+            const ask = parseFloat(parsedMsg.data.a);
+            const bid = parseFloat(parsedMsg.data.b);
+            const price = (ask + bid) / 2;
 
             latestPrices[symbol] = {
                 price,
                 decimal: decimals[symbol]!
             }
+            // console.log(`${symbol} Prices:`, {
+            //     ask: ask,
+            //     bid: bid,
+            //     mid: price,
+            //     decimal: decimals[symbol]
+            // });
         }
     } catch (error) {
         console.log("Ws parsing error: ", error);
