@@ -3,26 +3,27 @@ https://api.backpack.exchange/api/v1/klines?symbol=ETH_USDC&interval=1h&startTim
 */
 
 import axios from "axios";
-import type { Request, Response } from "express";
 
-export const getKlines = async (req: Request,res: Response) => {
+export const getKlines = async (req: Request): Promise<Response> => {
   try {
-    const asset = req.query.asset as string;
-    if(!asset) {
-        res.status(400).json({
-            message:"No asset selected"
-        })
-        return;
+     const url = new URL(req.url);
+    const asset = url.searchParams.get("asset");
+
+     if (!asset) {
+      return new Response(JSON.stringify({ message: "No asset selected" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
+     }
+
+    if (asset !== 'SOL' && asset !== 'ETH' && asset !== 'BTC') {
+      return new Response(JSON.stringify({ message: "Invalid asset selected" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" }
+      });
     }
 
-    if(asset !== 'SOL' && asset !== 'ETH' && asset !== 'BTC') {
-        res.status(400).json({
-            message: "Invalid asset selected"
-        });
-        return;
-    }
-
-    const interval = req.query.interval as string || '1h';
+    const interval = url.searchParams.get("interval") || '1h';
     const now = Math.floor(Date.now() / 1000);
     const startTime = now - 24 * 60 * 60;
     const endTime = now;
@@ -30,14 +31,18 @@ export const getKlines = async (req: Request,res: Response) => {
     const backpackAPI = `https://api.backpack.exchange/api/v1/klines?symbol=${asset}_USDC&interval=${interval}&startTime=${startTime}&endTime=${endTime}`
     const { data } = await axios.get(backpackAPI);
 
-    res.status(200).json(data);
-    return;
-  } catch (error:any) {
-    console.error("Failed to get klines: ",error.message);
-    res.status(500).json({
-        success: false,
-        message: "failed to get klines"
-    })
-    return;
+      return new Response(JSON.stringify(data), {
+      status: 200,
+      headers: { "Content-Type": "application/json" }
+    });
+  } catch (error: any) {
+    console.error("Failed to get klines: ", error.message);
+    return new Response(JSON.stringify({
+      success: false,
+      message: "failed to get klines"
+    }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
-}
+};

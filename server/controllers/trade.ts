@@ -1,7 +1,7 @@
-import type { Request, Response } from "express";
 import { redis, REDIS_PUSH_QUEUE } from "../redis";
 import { v4 as uuidv4 } from "uuid";
 import { waitForResponse } from "../utils/waitForResponse";
+import { jsonResponse } from "../utils/jsonResponse";
 
 export type Asset = 'SOL' | 'ETH' | 'BTC';
 
@@ -22,67 +22,64 @@ interface TradeResponse {
 }
 
 
-export const createTrade = async (req: Request, res: Response) => {
+export const createTrade = async (req: Request): Promise<Response> => {
     try {
-        const email = req.user.email;
+          const email = (req as any).user?.email;
         if (!email) {
-            res.status(401).json({
-                sucess: false,
+            return jsonResponse({
+                success: false,
                 message: "Unauthorized Access"
-            })
+            }, 401);
         }
 
-        const tradeData: CreateTradeRequest = req.body;
-        if(tradeData.margin<=99) {
-            res.status(400).json({
+         const tradeData: CreateTradeRequest = await req.json() as CreateTradeRequest;
+
+  if(tradeData.margin <= 99) {
+            return jsonResponse({
                 success: false,
                 message: "Margin must be greater than 0.99"
-            })
-            return;
+            }, 400);
         }
 
-        if(!['SOL', 'ETH', 'BTC'].includes(tradeData.asset)) {
-            res.status(400).json({
+         if(!['SOL', 'ETH', 'BTC'].includes(tradeData.asset)) {
+            return jsonResponse({
                 success: false,
                 message: "Invalid asset. Supported assets are SOL, ETH, BTC"
-            })
-            return;
+            }, 400);
         }
 
         if(!['long', 'short'].includes(tradeData.type)) {
-            res.status(400).json({
+            return jsonResponse({
                 success: false,
                 message: "Invalid trade type. Supported types are long and short"
-            })
-            return;
+            }, 400);
         }
 
-        if(tradeData.leverage<1 || tradeData.leverage>100) {
-            res.status(400).json({
+        if(tradeData.leverage < 1 || tradeData.leverage > 100) {
+            return jsonResponse({
                 success: false,
                 message: "Leverage must be between 1 and 100"
-            })
-            return;
+            }, 400);
         }
 
-        if(tradeData.slippage>10000 || tradeData.slippage < 10) {
-                res.status(400).json({
+           if(tradeData.slippage > 10000 || tradeData.slippage < 10) {
+            return jsonResponse({
                 success: false,
                 message: "Slippage value should be between 0.1 to 100 %"
-            })
-            return;
+            }, 400);
         }
 
       const currentPrice =  await redis.get(`price-${tradeData.asset}`);
 
       console.log("Current server price: ", currentPrice);
-        if (!currentPrice) {
-            res.status(400).json({
+
+           if (!currentPrice) {
+            return jsonResponse({
                 success: false,
                 message: "Current price not available for the selected asset"
-            });
-            return;
+            }, 400);
         }
+
         const tradeTimeVal = JSON.parse(currentPrice);
 
         const responseId = uuidv4();
@@ -106,30 +103,26 @@ export const createTrade = async (req: Request, res: Response) => {
             throw new Error(response.error || "Trade failed");
         }
 
-        res.status(200).json({ orderId });
-        return;
+      return jsonResponse({ orderId });
     } catch (error) {
-        console.error("Trade error:", error);
-        res.status(500).json({
+     console.error("Trade error:", error);
+        return jsonResponse({
             error: error instanceof Error ? error.message : "Internal server error"
-        });
-        return;
+        }, 500);
     }
 }
 
 
-export const closeTrade = async (req: Request, res: Response) => {
+export const closeTrade = async (req: Request): Promise<Response> => {
     try {
-        const email = req.user.email;
+        const email = (req as any).user?.email;
         if (!email) {
-            res.status(401).json({ error: "Unauthorized" });
-            return;
+            return jsonResponse({ error: "Unauthorized" }, 401);
         }
 
-        const { orderId } = req.body;
+        const { orderId } = await req.json() as { orderId: string};
         if (!orderId) {
-            res.status(400).json({ message: "Order Id is required " });
-            return;
+            return jsonResponse({ message: "Order Id is required" }, 400);
         }
 
         const responseId = uuidv4();
@@ -150,16 +143,12 @@ export const closeTrade = async (req: Request, res: Response) => {
             throw new Error(response.error || "Failed to close trade");
         }
 
-        res.status(200).json({
-            orderId
-        })
-
-        return;
+   return jsonResponse({ orderId });
 
     } catch (error) {
-        console.error("Trade close error:", error);
-        return res.status(500).json({
+           console.error("Trade close error:", error);
+        return jsonResponse({
             error: error instanceof Error ? error.message : "Internal server error"
-        });
+        }, 500);
     }
 }

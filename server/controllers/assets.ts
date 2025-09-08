@@ -1,19 +1,15 @@
-import type { Request, Response } from "express";
 import { SUPPORTED_ASSETS } from "../utils/supportedAssets";
 import { prisma } from "@exness/db";
+import { jsonResponse } from "../utils/jsonResponse";
 
-export const supportedAssets = async (req: Request, res: Response) => {
+export const supportedAssets = async (req: Request): Promise<Response> => {
     try {
-       const assets = SUPPORTED_ASSETS;
-       res.status(200).json({
-        "assets":assets
-       })
+       return jsonResponse({ assets: SUPPORTED_ASSETS });
     } catch (error) {
-        res.status(500).json({
+        return jsonResponse({
             success: false,
             message: "Internal Server error"
-        });
-        return;
+        }, 500);
     }
 }
 
@@ -51,21 +47,20 @@ export const upsertAssets = async (req: Request,res: Response) => {
 
         console.log(`Asset upsert completed. Total assets in DB: ${totalAssets}`);
 
-        res.status(200).json({
+      
+        return jsonResponse({
             success: true,
             message: `Successfully upserted ${upsertAssets.length} assets`,
             data: {
                 upserted: upsertAssets,
                 totalAssets
             }
-        })
-        return;
+        });
     } catch (error) {
         console.error("Failed to upsert data into DB: ",error);
-        res.status(500).json({
+        return jsonResponse({
             success: false,
             message: "Failed to delete asset"
-        })
-        return;
+        }, 500);
     }
 }

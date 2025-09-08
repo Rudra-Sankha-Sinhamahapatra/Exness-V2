@@ -1,8 +1,7 @@
 import { REDIS_PUSH_QUEUE } from "../redis";
-import type { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { waitForResponse } from "../utils/waitForResponse";
-
+import { jsonResponse } from "../utils/jsonResponse"
 
 interface BalanceResponse {
     success: boolean;
@@ -16,15 +15,11 @@ interface BalanceResponse {
     error: string
 }
 
-export const getUserBalance = async (req: Request, res: Response) => {
+export const getUserBalance = async (req: Request): Promise<Response> => {
     try {
-        const email = req.user.email;
-        if (!email) {
-            res.status(401).json({
-                success: false,
-                message: "Unauthorized Access"
-            });
-            return
+         const email = (req as any).user?.email;
+      if (!email) {
+            return jsonResponse({ success: false, message: "Unauthorized Access" }, 401);
         }
 
         const walletChannel = "user_wallet_stream";
@@ -60,24 +55,17 @@ export const getUserBalance = async (req: Request, res: Response) => {
             }
         };
 
-        return res.status(200).json(formattedBalance);
+        return jsonResponse(formattedBalance);
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Internal Server error"
-        });
-        return;
+    return jsonResponse({ success: false, message: "Internal Server error" }, 500);
     }
 }
 
-export const getUsdcBalance = async (req: Request, res: Response) => {
+export const getUsdcBalance = async (req: Request): Promise<Response> => {
     try {
-        const email = req.user?.email;
-        if (!email) {
-            return res.status(401).json({
-                success: false,
-                message: "Unauthorized Access"
-            });
+        const email = (req as any).user?.email;
+          if (!email) {
+            return jsonResponse({ success: false, message: "Unauthorized Access" }, 401);
         }
 
         const walletChannel = "user_wallet_stream";
@@ -97,14 +85,12 @@ export const getUsdcBalance = async (req: Request, res: Response) => {
             throw new Error(response.error || 'Failed to get balance');
         }
 
-        return res.status(200).json({
-            balance: Number(response.data.usdc.balance)
-        });
+       return jsonResponse({ balance: Number(response.data.usdc.balance) });
     } catch (error) {
-        console.error('Error in getUsdcBalance:', error);
-        return res.status(500).json({
+         console.error('Error in getUsdcBalance:', error);
+          return jsonResponse({
             success: false,
             message: error instanceof Error ? error.message : "Internal Server error"
-        });
+        }, 500);
     }
 }

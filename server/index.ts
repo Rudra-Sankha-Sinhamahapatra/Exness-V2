@@ -1,26 +1,55 @@
-import express, { type Request, type Response } from "express"
-import cors from "cors"
-import allRoutes from "./routes/routes";
-import cookieParser from "cookie-parser";
+import { router } from "./routes/routes";
 import { PORT } from "./config";
 import { prisma } from "@exness/db";
+import { corsHeaders } from "./utils/corsOptions";
 
-const app = express();
+const server = {
+    port: PORT,
+    async fetch(req: Request) {
+        if (req.method === "OPTIONS") {
+            return new Response(null, {
+                headers: corsHeaders
+            });
+        }
 
-app.use(express.json());
-app.use(cookieParser());
+        const cookies = Object.fromEntries(
+            (req.headers.get("cookie") || "")
+                .split(";")
+                .map(c => c.trim().split("=").map(decodeURIComponent))
+        );
 
-app.get("/", (req: Request, res: Response) => {
-    res.json({ message: "hello" });
-})
+        (req as any).cookies = cookies;
 
-app.use("/api/v1", allRoutes)
+        if (new URL(req.url).pathname === "/") {
+            return new Response(JSON.stringify({ message: "hello" }), {
+                headers: corsHeaders
+            });
+        }
 
-app.use(cors())
+        if (new URL(req.url).pathname.startsWith("/api/v1")) {
+            const response = await router(req);
 
-app.listen(PORT, async () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-})
+            const newHeaders = new Headers(response.headers);
+            Object.entries(corsHeaders).forEach(([key, value]) => {
+                newHeaders.set(key, value);
+            });
+
+            return new Response(response.body, {
+                status: response.status,
+                headers: newHeaders
+            });
+        }
+
+        return new Response(JSON.stringify({ error: "Not found" }), {
+            status: 404,
+            headers: corsHeaders
+        });
+    }
+};
+
+console.log(`Server is running on http://localhost:${PORT}`);
+
+Bun.serve(server);
 
 process.on('SIGINT', async () => {
     console.log('Shutting down Server...');

@@ -1,10 +1,9 @@
-import type { Request, Response } from "express";
 import { generateLinkToken, generateSessionToken, verifyToken } from "../token";
 import { resendClient } from "../resend";
 import { BACKEND_URL, FRONTEND_URL } from "../config";
 import { REDIS_PUSH_QUEUE } from "../redis";
 import { prisma } from "@exness/db";
-
+import { jsonResponse } from "../utils/jsonResponse";
 
 async function SendAuthEmail(email: string, type: "signup" | "signin", token: string) {
     const link = `${BACKEND_URL}/api/v1/signin/post?token=${token}`;
@@ -16,118 +15,114 @@ async function SendAuthEmail(email: string, type: "signup" | "signin", token: st
     });
 }
 
-export const signup = async (req: Request, res: Response) => {
+export const signup = async (req: Request): Promise<Response> => {
     try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ error: "Email required" });
-        
-        const exisingUser = await prisma.user.findUnique({
+        const { email } = await req.json() as { email?: string };
+        if (!email) return jsonResponse({ error: "Email required" }, 400);
+
+
+        const existingUser = await prisma.user.findUnique({
             where: {
                 email
             }
         });
-        
-        if(exisingUser) {
-            res.status(409).json({
+
+        if (existingUser) {
+            return jsonResponse({
                 success: false,
-                message: "User already exist"
-            })
-            return;
+                message: "User already exists"
+            }, 409);
         }
 
         const token = generateLinkToken(email);
         await SendAuthEmail(email, "signup", token);
 
-        res.status(200).json({
+        return jsonResponse({
             message: "Kindly check your mail for the signup link"
-        })
-        return
-    } catch (error:any) {
-        res.status(500).json({
+        });
+    } catch (error: any) {
+        return jsonResponse({
             message: "Internal Server error",
-            error: error
-        })
-        return;
+            error: String(error)
+        }, 500);
     }
 }
 
-export const signin = async (req: Request, res: Response) => {
+export const signin = async (req: Request): Promise<Response> => {
     try {
-        const { email } = req.body;
-        if (!email) return res.status(400).json({ error: "Email required" });
+        const { email } = await req.json() as { email?: string };
+        if (!email) return jsonResponse({ error: "Email required" }, 400);
 
-        const exisingUser = await prisma.user.findUnique({
+        const existingUser = await prisma.user.findUnique({
             where: {
                 email
             }
         });
 
-        if(!exisingUser) {
-            res.status(404).json({
+        if (!existingUser) {
+            return jsonResponse({
                 success: false,
                 message: "User not found"
-            })
-            return;
+            }, 404);
         }
 
         const token = generateLinkToken(email);
         await SendAuthEmail(email, "signin", token)
 
-        res.status(200).json({
+        return jsonResponse({
             message: "Kindly check your mail for the signin link"
-        })
-        return;
-    } catch (error) {
-        res.status(500).json({
-            message: "Internal Server error"
-        })
-        return;
+        });
+    } catch (error: any) {
+        return jsonResponse({
+            message: "Internal Server error",
+            error: error.message
+        }, 500);
     }
 }
 
-export const authPost = async (req: Request, res: Response) => {
+export const authPost = async (req: Request): Promise<Response> => {
     try {
-        const { token } = req.query;
+        const url = new URL(req.url);
+        const token = url.searchParams.get('token');
 
         if (!token || typeof token !== "string") {
-            return res.status(400).json({ error: "Invalid token" });
+            return jsonResponse({ error: "Invalid token" }, 400);
         }
 
         const email = verifyToken(token);
-        if (!email) return res.status(400).json({ error: "Invalid/expired token" });
+        if (!email) return jsonResponse({ error: "Invalid/expired token" }, 400);
 
         const walletChannel = "user_wallet_stream";
-        const event = "INITIALIZE_WALLET" 
+        const event = "INITIALIZE_WALLET"
 
-        await REDIS_PUSH_QUEUE.lpush(walletChannel, JSON.stringify({ email ,event}))
+        await REDIS_PUSH_QUEUE.lpush(walletChannel, JSON.stringify({ email, event }))
 
         const sessionToken = generateSessionToken(email);
-        
-        const exisingUser = await prisma.user.findUnique({
+
+        const existingUser = await prisma.user.findUnique({
             where: { email }
         });
 
-        if(!exisingUser) {
-         await prisma.user.create({
-            data: {
-             email,
-             lastLoggedIn: new Date()
+        if (!existingUser) {
+            await prisma.user.create({
+                data: {
+                    email,
+                    lastLoggedIn: new Date()
+                }
+            })
+        }
+
+        return new Response(null, {
+            status: 302,
+            headers: {
+                'Location': `${FRONTEND_URL}/dashboard`,
+                'Set-Cookie': `authToken=${sessionToken}; Path=/; HttpOnly; SameSite=Lax`
             }
-        })
-    }
-
-        res.cookie("authToken", sessionToken, {
-            httpOnly: true,
-            secure: false, 
-            sameSite: "lax",
         });
-
-        res.redirect(`${FRONTEND_URL}/dashboard`);
     } catch (error) {
-        console.log('error: ',error);
-        res.status(500).json({
+        console.log('error: ', error);
+        return jsonResponse({
             message: "Internal Server Error"
-        })
-        return
+        }, 500);
     }
 }
