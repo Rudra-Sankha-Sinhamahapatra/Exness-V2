@@ -1,0 +1,19 @@
+docker exec -it contest-1-snapshot psql -U postgres -d postgres
+
+postgres=# \dt
+           List of relations
+ Schema |   Name    | Type  |  Owner
+--------+-----------+-------+----------
+ public | snapshots | table | postgres
+(1 row)
+
+postgres=# TRUNCATE TABLE snapshots;
+TRUNCATE TABLE
+postgres=# SELECT COUNT(*) FROM snapshots;
+ count
+-------
+     1
+(1 row)
+                                                                         ^
+
+postgres=# SELECT * FROM snapshots LIMIT 10;
