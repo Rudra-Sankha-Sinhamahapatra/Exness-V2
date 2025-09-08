@@ -10,7 +10,7 @@ This ensures high-throughput, low-latency communication between services, while 
 ### Components
 
 * **Server**
-  Express.js backend that exposes HTTP APIs for user requests (balances, trades, wallet initialization).
+  Bun.js backend that exposes HTTP APIs for user requests (balances, trades, wallet initialization).
   Communicates with the Engine using Redis **queues**.
   Performs direct reads from Main DB for authentication and asset validation.
   Includes comprehensive trade validation for margin, leverage, and asset types.
@@ -126,7 +126,7 @@ Sophisticated profit/loss calculation with:
 
 * **Backend**
 
-  * Node.js + Express.js
+  * Bun.js Native Http
   * Bun Runtime
   * Redis (Queues + Streams + KV Store)
   * PostgreSQL (With Prisma ORM for main DB , Pg library for snapshots)
