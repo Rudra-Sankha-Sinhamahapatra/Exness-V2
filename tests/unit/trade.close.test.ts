@@ -1,7 +1,6 @@
 import request from "supertest"
 import { waitForResponse } from "../../server/utils/waitForResponse"
 import { createTestApp } from "../testApp"
-import { error } from "console";
 
 const app = createTestApp();
 

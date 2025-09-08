@@ -1,5 +1,22 @@
 import "jest"
 import Redis from "ioredis-mock"
+import { createTestApp } from "./testApp";
+
+declare global {
+  namespace jest {
+    interface Context {
+      app: ReturnType<typeof createTestApp>;
+    }
+  }
+}
+
+// Mock uuid to avoid ESM issues
+jest.mock("uuid", () => ({
+    v4: jest.fn(() => "mock-uuid-v4"),
+    v1: jest.fn(() => "mock-uuid-v1"),
+    v3: jest.fn(() => "mock-uuid-v3"),
+    v5: jest.fn(() => "mock-uuid-v5"),
+}));
 
 // we don't actually send mails
 jest.mock("../server/resend", () => ({
@@ -40,9 +57,9 @@ jest.mock("../server/utils/waitForResponse", () => ({
 
 jest.mock("../server/authMiddleware", () => {
     return {
-        authMiddleware: (req:any, _res:any, next:any) => {
-            if(!req.user) req.user = { email: "test@gmail.com"};
-            next()
+        authMiddleware: async (req: any, handler: any) => {
+            (req as any).user = { email: "test@gmail.com" };
+            return handler(req);
         }
     }
 })
