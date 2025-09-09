@@ -2,7 +2,7 @@ import { signup, signin, authPost } from "../controllers/auth";
 import { authMiddleware } from "../authMiddleware";
 import { getUsdcBalance, getUserBalance } from "../controllers/balance";
 import { supportedAssets, upsertAssets } from "../controllers/assets";
-import { closeTrade, createTrade } from "../controllers/trade";
+import { closeTrade, createTrade, getTradeHistory } from "../controllers/trade";
 import { getKlines } from "../controllers/klines";
 import { jsonResponse } from "../utils/jsonResponse";
 
@@ -45,6 +45,8 @@ export async function router(req: Request): Promise<Response> {
                     return await supportedAssets(req);
                 case "/klines":
                     return await getKlines(req);
+                case "/trade/history":
+                    return await authMiddleware(req, async (req) => getTradeHistory(req));
                 default:
                     return jsonResponse({ error: "Not found" }, 404);
             }
