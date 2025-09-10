@@ -7,10 +7,12 @@ import { BACKEND_URL } from "@/config"
 import TradingViewChart from "./TradingViewChart"
 import { LoaderCircle } from "lucide-react"
 import { OHLCData } from "@/types/chartPage"
+import { Asssets } from "@/config/assets"
 
 interface TradingChartProps {
-  asset: "BTC" | "ETH" | "SOL"
+  asset: "BTC" | "ETH" | "SOL",
 }
+
 
 export function TradingChart({ asset }: TradingChartProps) {
   const [interval, setInterval] = useState("1h")
@@ -64,7 +66,11 @@ export function TradingChart({ asset }: TradingChartProps) {
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              {asset}/USDC Chart
+              <img
+                src={Asssets.find((assset) => asset === assset.symbol)?.imageUrl}
+                alt={asset}
+                className="w-6 h-6 inline-block"
+              /> {asset} Chart
               {loading && <LoaderCircle className="animate-spin h-4 w-4" />}
             </CardTitle>
             <div className="flex items-center gap-2 mt-1">

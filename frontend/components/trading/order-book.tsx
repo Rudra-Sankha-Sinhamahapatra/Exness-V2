@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { apiService } from "@/lib/api-service"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
@@ -19,36 +20,59 @@ export function OrderBook({ asset }: OrderBookProps) {
   const [asks, setAsks] = useState<OrderBookEntry[]>([])
 
   useEffect(() => {
-    const generateOrderBook = () => {
-      const basePrices = { BTC: 45000, ETH: 3000, SOL: 100 }
-      const basePrice = basePrices[asset]
+    let isMounted = true;
+    const fetchOrderBook = async () => {
+      try {
+        // Get latest 20 klines for the asset (1m interval for more granularity)
+        const klines = await apiService.market.getKlines(asset, "1m");
+        if (!isMounted || !klines || klines.length === 0) return;
+        // Use last 10 for asks, previous 10 for bids
+        const last20 = klines.slice(-20);
+        const asksRaw = last20.slice(-10);
+        const bidsRaw = last20.slice(0, 10);
 
-      const newBids: OrderBookEntry[] = []
-      const newAsks: OrderBookEntry[] = []
+        // Map to order book entries
+        const asks: OrderBookEntry[] = asksRaw.map((k: any) => {
+          const price = typeof k.high === 'string' ? parseFloat(k.high) : k.high;
+          const size = typeof k.volume === 'string' ? parseFloat(k.volume) : k.volume;
+          return { price, size, total: 0 };
+        });
+        const bids: OrderBookEntry[] = bidsRaw.map((k: any) => {
+          const price = typeof k.low === 'string' ? parseFloat(k.low) : k.low;
+          const size = typeof k.volume === 'string' ? parseFloat(k.volume) : k.volume;
+          return { price, size, total: 0 };
+        });
 
+        // Sort asks ascending, bids descending
+        asks.sort((a, b) => a.price - b.price);
+        bids.sort((a, b) => b.price - a.price);
 
-      for (let i = 0; i < 10; i++) {
-        const price = basePrice - (i + 1) * (basePrice * 0.001)
-        const size = Math.random() * 10 + 1
-        const total = i === 0 ? size : newBids[i - 1].total + size
-        newBids.push({ price, size, total })
+        // Calculate cumulative total for depth
+        let total = 0;
+        for (let i = 0; i < asks.length; i++) {
+          total += asks[i].size;
+          asks[i].total = total;
+        }
+        total = 0;
+        for (let i = 0; i < bids.length; i++) {
+          total += bids[i].size;
+          bids[i].total = total;
+        }
+
+        setAsks(asks);
+        setBids(bids);
+      } catch (err) {
+        setAsks([]);
+        setBids([]);
       }
-
-      for (let i = 0; i < 10; i++) {
-        const price = basePrice + (i + 1) * (basePrice * 0.001)
-        const size = Math.random() * 10 + 1
-        const total = i === 0 ? size : newAsks[i - 1].total + size
-        newAsks.push({ price, size, total })
-      }
-
-      setBids(newBids)
-      setAsks(newAsks.reverse()) 
-    }
-
-    generateOrderBook()
-    const interval = setInterval(generateOrderBook, 3000)
-    return () => clearInterval(interval)
-  }, [asset])
+    };
+    fetchOrderBook();
+    const interval = setInterval(fetchOrderBook, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [asset]);
 
   const maxTotal = Math.max(...bids.map((b) => b.total), ...asks.map((a) => a.total))
 

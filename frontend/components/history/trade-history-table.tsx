@@ -260,7 +260,10 @@ export function TradeHistoryTable() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => openTradeDetails(trade)}
                   >
-                    <TableCell className="font-medium">{trade.asset}</TableCell>
+                    <TableCell className="font-medium">
+                      <img src={trade.assetImage} alt={trade.assetName || trade.asset} className="h-6 w-6 inline-block mr-2 align-middle rounded-full bg-muted" suppressHydrationWarning={true} />
+                      {trade.asset}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {trade.tradeType === "long" ? (

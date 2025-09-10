@@ -1,93 +1,100 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { apiService } from "@/lib/api-service"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowDownToLine, ArrowUpFromLine, TrendingUp, TrendingDown, Search, Filter } from "lucide-react"
+import {  TrendingUp, TrendingDown, Search, Filter } from "lucide-react"
 
-// Mock transaction data
-const mockTransactions = [
-  {
-    id: "tx-1",
-    type: "deposit" as const,
-    asset: "USDC",
-    amount: 5000,
-    status: "completed" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30),
-    txHash: "0x1234...5678",
-  },
-  {
-    id: "tx-2",
-    type: "trade" as const,
-    asset: "BTC",
-    amount: 0.1,
-    status: "completed" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-    txHash: "0xabcd...efgh",
-    tradeType: "buy",
-  },
-  {
-    id: "tx-3",
-    type: "withdraw" as const,
-    asset: "ETH",
-    amount: 1.5,
-    status: "pending" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6),
-    txHash: "0x9876...5432",
-  },
-  {
-    id: "tx-4",
-    type: "trade" as const,
-    asset: "SOL",
-    amount: 50,
-    status: "completed" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24),
-    txHash: "0xfedc...ba98",
-    tradeType: "sell",
-  },
-]
+type Transaction = {
+  id: string
+  asset: string
+  assetName: string
+  assetImage: string
+  openPrice: number
+  closePrice: number
+  leverage: number
+  pnl: number
+  pnlPercentage: number
+  status: string
+  liquidated: boolean
+  createdAt: string
+  duration: string
+  orderId: string
+}
 
 export function TransactionHistory() {
-  const [transactions] = useState(mockTransactions)
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [filter, setFilter] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      setLoading(true)
+      try {
+        const response = await apiService.trading.getHistory()
+        if (response.success && response.data) {
+          const txs = response.data.map((trade: any) => ({
+            id: trade.id || trade.orderId,
+            asset: trade.asset,
+            assetName: trade.assetName,
+            assetImage: trade.assetImage,
+            openPrice: trade.openPrice,
+            closePrice: trade.closePrice,
+            leverage: trade.leverage,
+            pnl: trade.pnl,
+            pnlPercentage: trade.pnlPercentage,
+            status: trade.status,
+            liquidated: trade.liquidated,
+            createdAt: trade.createdAt,
+            duration: trade.duration,
+            orderId: trade.orderId,
+          }))
+          setTransactions(txs)
+        } else {
+          setTransactions([])
+        }
+      } catch (error) {
+        setTransactions([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTransactions()
+  }, [])
 
   const filteredTransactions = transactions.filter((tx) => {
-    const matchesFilter = filter === "all" || tx.type === filter
+    const matchesFilter = filter === "all" || filter === "trade"
     const matchesSearch =
       tx.asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.txHash.toLowerCase().includes(searchTerm.toLowerCase())
+      tx.orderId.toLowerCase().includes(searchTerm.toLowerCase())
     return matchesFilter && matchesSearch
   })
 
-  const getTransactionIcon = (type: string, tradeType?: string) => {
-    switch (type) {
-      case "deposit":
-        return <ArrowDownToLine className="h-4 w-4 text-green-500" />
-      case "withdraw":
-        return <ArrowUpFromLine className="h-4 w-4 text-red-500" />
-      case "trade":
-        return tradeType === "buy" ? (
-          <TrendingUp className="h-4 w-4 text-green-500" />
-        ) : (
-          <TrendingDown className="h-4 w-4 text-red-500" />
-        )
-      default:
-        return null
+  const getTransactionIcon = (pnl: number, liquidated: boolean) => {
+    if (liquidated) {
+      return <TrendingDown className="h-4 w-4 text-red-500" />
     }
+    return pnl >= 0 ? (
+      <TrendingUp className="h-4 w-4 text-green-500" />
+    ) : (
+      <TrendingDown className="h-4 w-4 text-red-500" />
+    )
   }
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, liquidated: boolean) => {
+    if (liquidated) {
+      return <Badge variant="destructive">Liquidated</Badge>
+    }
     switch (status) {
+      case "closed":
+        return <Badge variant="secondary">Closed</Badge>
       case "completed":
-        return (
-          <Badge variant="default" className="bg-green-500">
-            Completed
-          </Badge>
-        )
+        return <Badge variant="default" className="bg-green-500">Completed</Badge>
       case "pending":
         return <Badge variant="secondary">Pending</Badge>
       case "failed":
@@ -129,32 +136,44 @@ export function TransactionHistory() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {filteredTransactions.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : filteredTransactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">No transactions found</div>
           ) : (
             filteredTransactions.map((tx) => (
               <div key={tx.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center gap-4">
-                  {getTransactionIcon(tx.type, (tx as any).tradeType)}
-
+                  <img src={tx.assetImage} alt={tx.assetName} className="h-8 w-8 rounded-full bg-muted" />
+                  {getTransactionIcon(tx.pnl, tx.liquidated)}
                   <div>
                     <div className="font-medium capitalize">
-                      {tx.type === "trade" ? `${(tx as any).tradeType} ${tx.asset}` : `${tx.type} ${tx.asset}`}
+                      {tx.assetName} <span className="text-xs text-muted-foreground">x{tx.leverage}</span>
                     </div>
-                    <div className="text-sm text-muted-foreground">{tx.timestamp.toLocaleString()}</div>
+                    <div className="text-xs text-muted-foreground">Entry: {tx.openPrice} | Exit: {tx.closePrice}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleString()} | {tx.duration}</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="text-right">
-                    <div className="font-medium">
-                      {tx.type === "withdraw" || (tx.type === "trade" && (tx as any).tradeType === "sell") ? "-" : "+"}
-                      {tx.amount} {tx.asset}
+                    <div className={`font-medium ${tx.pnl && tx.pnl > 0 ? "text-green-500" : tx.pnl && tx.pnl < 0 ? "text-red-500" : ""}`}>
+                      {tx.pnl != null ? (
+                        <>
+                          {tx.pnl > 0 ? "+" : tx.pnl < 0 ? "-" : ""}
+                          {Math.abs(tx.pnl)} {tx.asset}
+                        </>
+                      ) : (
+                        <>-- {tx.asset}</>
+                      )}
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        {tx.pnlPercentage != null ? `(${tx.pnlPercentage > 0 ? "+" : ""}${tx.pnlPercentage.toFixed(2)}%)` : "(--%)"}
+                      </span>
                     </div>
-                    <div className="text-xs text-muted-foreground font-mono">{tx.txHash}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{tx.orderId}</div>
                   </div>
 
-                  {getStatusBadge(tx.status)}
+                  {getStatusBadge(tx.status, tx.liquidated)}
                 </div>
               </div>
             ))

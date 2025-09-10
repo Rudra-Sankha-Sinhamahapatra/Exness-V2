@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { BarChart3, Wallet, TrendingUp, History, Settings, LogOut, Menu, User } from "lucide-react"
+import { BarChart3, Wallet, TrendingUp, History, Settings, LogOut, Menu, User, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -22,8 +22,10 @@ interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
+
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarVisible, setSidebarVisible] = useState(true)
   const pathname = usePathname()
 
   const handleLogout = () => {
@@ -32,15 +34,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className="flex h-full flex-col">
-      {/* Logo */}
-      <div className="flex h-16 shrink-0 items-center px-6 border-b border-border">
+    <div className="flex h-full flex-col z-100 relative">
+      {/* Logo and Close Button */}
+      <div className="flex h-16 shrink-0 items-center px-6 border-b border-border justify-between">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <TrendingUp className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-xl font-bold text-foreground">CryptoTrade</span>
         </div>
+        {!mobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarVisible(false)}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -93,9 +106,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="flex h-screen bg-background">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border">
-        <Sidebar />
-      </div>
+      {sidebarVisible && (
+        <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border z-50">
+          <Sidebar />
+        </div>
+      )}
+
+      {/* Sidebar Toggle Button (Desktop) */}
+      {!sidebarVisible && (
+        <button
+          className="hidden lg:block fixed top-4 left-4 z-50 bg-sidebar border border-sidebar-border rounded-full p-2 shadow hover:bg-sidebar-accent transition-colors"
+          onClick={() => setSidebarVisible(true)}
+          aria-label="Open sidebar"
+        >
+          <Menu className="h-5 w-5 text-sidebar-foreground" />
+        </button>
+      )}
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
@@ -105,7 +131,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </Sheet>
 
       {/* Main Content */}
-      <div className="flex flex-1 flex-col lg:pl-64">
+      <div className={`flex flex-1 flex-col ${sidebarVisible ? 'lg:pl-64' : ''}`}>
         {/* Mobile Header */}
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 lg:hidden">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>

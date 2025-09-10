@@ -160,17 +160,5 @@ export const apiService = {
   balance: {
     getBalance: () => 
       apiService.request('/api/v1/balance'),
-    
-    deposit: (amount: number) => 
-      apiService.request('/api/v1/balance/deposit', {
-        method: 'POST',
-        body: { amount },
-      }),
-    
-    withdraw: (amount: number) => 
-      apiService.request('/api/v1/balance/withdraw', {
-        method: 'POST',
-        body: { amount },
-      }),
   },
 };

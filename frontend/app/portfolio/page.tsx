@@ -4,7 +4,7 @@ import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { PortfolioOverview } from "@/components/portfolio/portfolio-overview"
 import { AssetAllocation } from "@/components/portfolio/asset-allocation"
 import { TransactionHistory } from "@/components/portfolio/transaction-history"
-import { DepositWithdraw } from "@/components/portfolio/deposit-withdraw"
+// import { DepositWithdraw } from "@/components/portfolio/deposit-withdraw"
 
 export default async function PortfolioPage() {
   const cookieStore = await cookies()
@@ -33,9 +33,9 @@ export default async function PortfolioPage() {
           </div>
 
           {/* Deposit/Withdraw Panel */}
-          <div className="lg:col-span-1">
+          {/* <div className="lg:col-span-1">
             <DepositWithdraw />
-          </div>
+          </div> */}
         </div>
 
         {/* Transaction History */}

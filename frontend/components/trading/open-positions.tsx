@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { apiService } from "@/lib/api-service"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,41 +9,61 @@ import { useToast } from "@/hooks/use-toast"
 import { TrendingUp, TrendingDown, X, Edit } from "lucide-react"
 import { BACKEND_URL } from "@/config"
 
-// Mock data - in real app this would come from API
-const mockPositions = [
-  {
-    id: "pos-1",
-    asset: "BTC",
-    type: "long" as const,
-    margin: 1000,
-    leverage: 10,
-    entryPrice: 44800,
-    currentPrice: 45200,
-    size: 10000,
-    pnl: 89.29,
-    pnlPercent: 0.89,
-    liquidationPrice: 40320,
-    timestamp: new Date(Date.now() - 1000 * 60 * 45),
-  },
-  {
-    id: "pos-2",
-    asset: "ETH",
-    type: "short" as const,
-    margin: 500,
-    leverage: 5,
-    entryPrice: 3020,
-    currentPrice: 2980,
-    size: 2500,
-    pnl: 66.23,
-    pnlPercent: 1.32,
-    liquidationPrice: 3624,
-    timestamp: new Date(Date.now() - 1000 * 60 * 120),
-  },
-]
+
+type Position = {
+  id: string
+  orderId: string
+  asset: string
+  type: "long" | "short"
+  margin: number
+  leverage: number
+  entryPrice: number
+  size: number
+  pnl: number
+  pnlPercent: number
+  liquidationPrice: number
+  timestamp: string | Date
+}
+
 
 export function OpenPositions() {
-  const [positions, setPositions] = useState(mockPositions)
+  const [positions, setPositions] = useState<Position[]>([])
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+      const fetchPositions = async () => {
+      setLoading(true)
+      try {
+        const response = await apiService.trading.getHistory({ status: "open" })
+        if (response.success && response.data) {
+          const openPositions = response.data.map((trade: any) => ({
+            id: trade.id ,
+            orderId: trade.orderId,
+            asset: trade.asset,
+            type: trade.tradeType,
+            margin: trade.margin,
+            leverage: trade.leverage,
+            entryPrice: trade.openPrice,
+            size: trade.size ?? trade.margin * trade.leverage,
+            pnl: trade.pnl ?? 0,
+            pnlPercent: trade.pnlPercentage ?? 0,
+            liquidationPrice: trade.liquidationPrice ?? 0,
+            timestamp: trade.createdAt,
+          }))
+          setPositions(openPositions)
+        } else {
+          setPositions([])
+        }
+      } catch (error) {
+        setPositions([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+  useEffect(() => {
+    fetchPositions()
+  }, [])
 
   const handleClosePosition = async (positionId: string) => {
     try {
@@ -74,9 +95,23 @@ export function OpenPositions() {
         description: "Please check your connection and try again",
         variant: "destructive",
       })
+    } finally {
+      fetchPositions()
     }
   }
 
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Open Positions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-muted-foreground">Loading...</div>
+        </CardContent>
+      </Card>
+    )
+  }
   if (positions.length === 0) {
     return (
       <Card>
@@ -118,7 +153,7 @@ export function OpenPositions() {
                   <Button size="sm" variant="ghost">
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleClosePosition(position.id)}>
+                  <Button size="sm" variant="ghost" onClick={() => handleClosePosition(position.orderId)}>
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
@@ -126,18 +161,8 @@ export function OpenPositions() {
 
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                 <div>
-                  <div className="text-muted-foreground">Size</div>
-                  <div className="font-medium">${position.size.toLocaleString()}</div>
-                </div>
-
-                <div>
                   <div className="text-muted-foreground">Entry Price</div>
                   <div className="font-medium">${position.entryPrice.toLocaleString()}</div>
-                </div>
-
-                <div>
-                  <div className="text-muted-foreground">Current Price</div>
-                  <div className="font-medium">${position.currentPrice.toLocaleString()}</div>
                 </div>
 
                 <div>

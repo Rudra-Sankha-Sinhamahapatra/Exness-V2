@@ -14,15 +14,13 @@ import { BACKEND_URL } from "@/config"
 
 interface TradingFormProps {
   asset: "BTC" | "ETH" | "SOL"
-  currentPrice: number
 }
 
-export function TradingForm({ asset, currentPrice }: TradingFormProps) {
-  const [orderType, setOrderType] = useState<"market" | "limit">("market")
+export function TradingForm({ asset }: TradingFormProps) {
+  const [orderType, setOrderType] = useState<"market">("market")
   const [margin, setMargin] = useState("")
   const [leverage, setLeverage] = useState([10])
   const [slippage, setSlippage] = useState("100")
-  const [limitPrice, setLimitPrice] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
@@ -48,14 +46,14 @@ export function TradingForm({ asset, currentPrice }: TradingFormProps) {
       return
     }
 
-    if (orderType === "limit" && (!limitPrice || Number.parseFloat(limitPrice) <= 0)) {
-      toast({
-        title: "Invalid limit price",
-        description: "Please enter a valid limit price",
-        variant: "destructive",
-      })
-      return
-    }
+    // if (orderType === "limit" && (!limitPrice || Number.parseFloat(limitPrice) <= 0)) {
+    //   toast({
+    //     title: "Invalid limit price",
+    //     description: "Please enter a valid limit price",
+    //     variant: "destructive",
+    //   })
+    //   return
+    // }
 
     setIsLoading(true)
 
@@ -69,7 +67,7 @@ export function TradingForm({ asset, currentPrice }: TradingFormProps) {
         body: JSON.stringify({
           asset,
           type,
-          margin: Number.parseFloat(margin) * 100, // Convert to cents
+          margin: Number.parseFloat(margin) * 100, 
           leverage: leverage[0],
           slippage: Number.parseInt(slippage),
         }),
@@ -83,7 +81,6 @@ export function TradingForm({ asset, currentPrice }: TradingFormProps) {
           description: `${type.toUpperCase()} position opened for ${asset}`,
         })
         setMargin("")
-        setLimitPrice("")
       } else {
         toast({
           title: "Trade failed",
@@ -111,20 +108,13 @@ export function TradingForm({ asset, currentPrice }: TradingFormProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "market" | "limit")}>
+        <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "market")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="market">Market</TabsTrigger>
-            <TabsTrigger value="limit">Limit</TabsTrigger>
+            {/* <TabsTrigger value="limit">Limit</TabsTrigger> */}
           </TabsList>
 
-          <TabsContent value="market" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label>Current Price</Label>
-              <div className="text-lg font-semibold text-primary">${currentPrice.toLocaleString()}</div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="limit" className="space-y-4 mt-4">
+          {/* <TabsContent value="limit" className="space-y-4 mt-4">
             <div className="space-y-2">
               <Label htmlFor="limit-price">Limit Price (USD)</Label>
               <Input
@@ -136,7 +126,7 @@ export function TradingForm({ asset, currentPrice }: TradingFormProps) {
                 step="0.01"
               />
             </div>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
 
         <div className="space-y-4 mt-4">

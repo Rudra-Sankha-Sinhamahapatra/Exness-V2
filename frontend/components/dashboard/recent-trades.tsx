@@ -4,66 +4,63 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, TrendingDown, X } from "lucide-react"
-import { BACKEND_URL } from "@/config"
+import { useEffect, useState } from "react"
+import { apiService } from "@/lib/api-service"
 
-// Mock data - in real app this would come from API
-const mockTrades = [
-  {
-    id: "1",
-    asset: "BTC",
-    type: "long" as const,
-    margin: 1000,
-    leverage: 10,
-    entryPrice: 45000,
-    currentPrice: 45500,
-    pnl: 111.11,
-    status: "open" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-  },
-  {
-    id: "2",
-    asset: "ETH",
-    type: "short" as const,
-    margin: 500,
-    leverage: 5,
-    entryPrice: 3000,
-    currentPrice: 2950,
-    pnl: 83.33,
-    status: "open" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-  },
-  {
-    id: "3",
-    asset: "SOL",
-    type: "long" as const,
-    margin: 200,
-    leverage: 20,
-    entryPrice: 100,
-    currentPrice: 98,
-    pnl: -80,
-    status: "closed" as const,
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-  },
-]
+type Trade = {
+  id: string
+  orderId: string
+  asset: string
+  assetName?: string
+  assetImage?: string
+  tradeType: "long" | "short"
+  margin: number
+  leverage: number
+  openPrice: number
+  closePrice?: number
+  pnl: number
+  status: "open" | "closed"
+  createdAt: string
+}
+
 
 export function RecentTrades() {
-  const handleCloseTrade = async (orderId: string) => {
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/trade/close`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ orderId }),
-      })
+  const [trades, setTrades] = useState<Trade[]>([])
+  const [loading, setLoading] = useState(true)
+  const [closingId, setClosingId] = useState<string | null>(null)
 
-      if (response.ok) {
-        // In real app, refresh the trades list
-        console.log("Trade closed successfully")
+  const fetchOpenTrades = async () => {
+    setLoading(true)
+    try {
+      const response = await apiService.trading.getHistory()
+      if (response.success && response.data) {
+        setTrades(response.data)
+      } else {
+        setTrades([])
+      }
+    } catch (error) {
+      setTrades([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchOpenTrades()
+  }, [])
+
+  const handleCloseTrade = async (orderId: string) => {
+    setClosingId(orderId)
+    try {
+      const response = await apiService.trading.closePosition(orderId)
+      if (response && response.orderId) {
+        // Refresh the trades list
+        fetchOpenTrades()
       }
     } catch (error) {
       console.error("Failed to close trade:", error)
+    } finally {
+      setClosingId(null)
     }
   }
 
@@ -74,40 +71,50 @@ export function RecentTrades() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {mockTrades.map((trade) => (
-            <div key={trade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  {trade.type === "long" ? (
-                    <TrendingUp className="h-4 w-4 text-green-500" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-500" />
-                  )}
-                  <span className="font-medium">{trade.asset}</span>
-                  <Badge variant={trade.type === "long" ? "default" : "destructive"}>{trade.type.toUpperCase()}</Badge>
-                </div>
-
-                <div className="text-sm text-muted-foreground">
-                  ${trade.margin} • {trade.leverage}x
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className={`font-medium ${trade.pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
-                    {trade.pnl >= 0 ? "+" : ""}${trade.pnl.toFixed(2)}
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">Loading...</div>
+          ) : trades.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">No open trades</div>
+          ) : (
+            trades.map((trade) => (
+              <div key={trade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
+                <div className="flex items-center gap-4">
+                   <div>
+                      Open Price: ${trade.openPrice}
+                    </div>
+                  <div className="flex items-center gap-2">
+                    {trade.tradeType === "long" ? (
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                    )}
+                    <span className="font-medium">{trade.asset}</span>
+                    <Badge variant={trade.tradeType === "long" ? "default" : "destructive"}>{trade.tradeType.toUpperCase()}</Badge>
                   </div>
-                  <div className="text-xs text-muted-foreground" suppressHydrationWarning>{trade.timestamp.toLocaleTimeString()}</div>
+
+                  <div className="text-sm text-muted-foreground">
+                    ${trade.margin} • {trade.leverage}x
+                  </div>
                 </div>
 
-                {trade.status === "open" && (
-                  <Button size="sm" variant="ghost" onClick={() => handleCloseTrade(trade.id)}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <div className={`font-medium ${trade.pnl && trade.pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
+                      {trade.pnl && trade.pnl >= 0 ? "+" : ""}${trade.pnl && trade.pnl.toFixed(2)}
+                    </div>
+                    <div className="text-xs text-muted-foreground" suppressHydrationWarning>{new Date(trade.createdAt).toLocaleTimeString()}</div>
+                   {trade.closePrice ?? <div>Closed at: ${trade.closePrice}</div>}
+                  </div>
+
+                  {trade.status === "open" && (
+                    <Button size="sm" variant="ghost" onClick={() => handleCloseTrade(trade.orderId)} disabled={closingId === trade.orderId}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </CardContent>
     </Card>
