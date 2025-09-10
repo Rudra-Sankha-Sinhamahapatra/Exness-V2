@@ -1,5 +1,11 @@
 # Exness
 
+## Demo Vid
+
+https://github.com/user-attachments/assets/ae8db22a-bb99-4047-b900-dea197866e70
+
+eo
+
 ## Architecture
 
 The system is built as a set of microservices that communicate via **Redis Queues** and **Redis Streams**.
