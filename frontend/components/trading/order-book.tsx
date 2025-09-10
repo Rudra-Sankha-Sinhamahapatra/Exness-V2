@@ -23,15 +23,13 @@ export function OrderBook({ asset }: OrderBookProps) {
     let isMounted = true;
     const fetchOrderBook = async () => {
       try {
-        // Get latest 20 klines for the asset (1m interval for more granularity)
         const klines = await apiService.market.getKlines(asset, "1m");
         if (!isMounted || !klines || klines.length === 0) return;
-        // Use last 10 for asks, previous 10 for bids
+ 
         const last20 = klines.slice(-20);
         const asksRaw = last20.slice(-10);
         const bidsRaw = last20.slice(0, 10);
 
-        // Map to order book entries
         const asks: OrderBookEntry[] = asksRaw.map((k: any) => {
           const price = typeof k.high === 'string' ? parseFloat(k.high) : k.high;
           const size = typeof k.volume === 'string' ? parseFloat(k.volume) : k.volume;
@@ -43,11 +41,9 @@ export function OrderBook({ asset }: OrderBookProps) {
           return { price, size, total: 0 };
         });
 
-        // Sort asks ascending, bids descending
         asks.sort((a, b) => a.price - b.price);
         bids.sort((a, b) => b.price - a.price);
 
-        // Calculate cumulative total for depth
         let total = 0;
         for (let i = 0; i < asks.length; i++) {
           total += asks[i].size;
@@ -84,7 +80,7 @@ export function OrderBook({ asset }: OrderBookProps) {
     type: "bid" | "ask"
   }) => (
     <div className="relative flex justify-between items-center py-1 px-2 text-xs hover:bg-muted/50">
-      {/* Background bar showing depth */}
+  
       <div
         className={`absolute left-0 top-0 h-full opacity-20 ${type === "bid" ? "bg-green-500" : "bg-red-500"}`}
         style={{ width: `${(entry.total / maxTotal) * 100}%` }}
@@ -106,7 +102,6 @@ export function OrderBook({ asset }: OrderBookProps) {
           </Badge>
         </div>
 
-        {/* Header */}
         <div className="flex justify-between text-xs text-muted-foreground px-2">
           <span>Price</span>
           <span>Size</span>
@@ -116,14 +111,13 @@ export function OrderBook({ asset }: OrderBookProps) {
 
       <CardContent className="p-0">
         <div className="max-h-96 overflow-y-auto">
-          {/* Asks (Sell Orders) */}
           <div className="space-y-0.5">
             {asks.map((ask, index) => (
               <OrderBookRow key={`ask-${index}`} entry={ask} type="ask" />
             ))}
           </div>
 
-          {/* Spread */}
+
           <div className="py-2 px-2 border-y border-border bg-muted/30">
             <div className="text-center text-xs">
               <div className="text-muted-foreground">Spread</div>
@@ -131,7 +125,6 @@ export function OrderBook({ asset }: OrderBookProps) {
             </div>
           </div>
 
-          {/* Bids (Buy Orders) */}
           <div className="space-y-0.5">
             {bids.map((bid, index) => (
               <OrderBookRow key={`bid-${index}`} entry={bid} type="bid" />

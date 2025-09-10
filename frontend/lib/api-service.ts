@@ -56,7 +56,6 @@ export const apiService = {
     }
   },
 
-  // Auth endpoints
   auth: {
     login: (email: string, password: string) => 
       apiService.request('/api/v1/auth/login', {
@@ -76,7 +75,6 @@ export const apiService = {
       apiService.request('/api/v1/auth/logout'),
   },
 
-  // Market data endpoints
   market: {
     getKlines: (asset: string, interval: string) => 
       apiService.request(`/api/v1/klines?asset=${asset}&interval=${interval}`, {
@@ -85,11 +83,10 @@ export const apiService = {
     
     getAssets: () => 
       apiService.request('/api/v1/assets', {
-        requiresAuth: false, // Public endpoint
+        requiresAuth: false, 
       }),
   },
 
-  // Trading endpoints
   trading: {
     openPosition: (asset: string, type: 'long' | 'short', margin: number, leverage: number) => 
       apiService.request('/api/v1/trade/open', {
@@ -156,7 +153,6 @@ export const apiService = {
     },
   },
 
-  // Balance endpoints
   balance: {
     getBalance: () => 
       apiService.request('/api/v1/balance'),

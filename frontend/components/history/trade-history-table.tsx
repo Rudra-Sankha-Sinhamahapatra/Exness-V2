@@ -47,7 +47,6 @@ export function TradeHistoryTable() {
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
-  // Fetch trade history from the API
   useEffect(() => {
     const fetchTrades = async () => {
       setLoading(true)
@@ -94,7 +93,6 @@ export function TradeHistoryTable() {
     fetchTrades()
   }, [assetFilter, typeFilter, statusFilter, sortBy, sortOrder, toast])
 
-  // Filter trades based on search term
   const filteredTrades = trades.filter((trade) => {
     const matchesSearch = 
       trade.asset.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -115,7 +113,6 @@ export function TradeHistoryTable() {
     try {
       const response = await apiService.trading.closePosition(trade.orderId)
       if (response.orderId) {
-        // Refresh trades
         const updatedTrades = trades.map(t => 
           t.orderId === trade.orderId ? { ...t, status: "closed" as const } : t
         )

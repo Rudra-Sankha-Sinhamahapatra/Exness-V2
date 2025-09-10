@@ -30,7 +30,7 @@ export function TradeAnalytics() {
       try {
         const response = await apiService.trading.getHistory({ limit: 100 })
         if (response.success && response.analytics) {
-          // Calculate winRate, avgWin, avgLoss, largestWin, largestLoss, profitFactor
+
           const trades = response.data || []
           const wins = trades.filter((t: any) => t.pnl !== null && t.pnl > 0)
           const losses = trades.filter((t: any) => t.pnl !== null && t.pnl < 0)
@@ -83,7 +83,7 @@ export function TradeAnalytics() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Total P&L */}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total P&L</CardTitle>
@@ -135,7 +135,6 @@ export function TradeAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Average Win */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Avg Win</CardTitle>
@@ -147,7 +146,6 @@ export function TradeAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Average Loss */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Avg Loss</CardTitle>
@@ -159,7 +157,6 @@ export function TradeAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Largest Win */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Largest Win</CardTitle>
@@ -171,7 +168,6 @@ export function TradeAnalytics() {
         </CardContent>
       </Card>
 
-      {/* Largest Loss */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Largest Loss</CardTitle>

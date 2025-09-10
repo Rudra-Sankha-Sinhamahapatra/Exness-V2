@@ -35,7 +35,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div className="flex h-full flex-col z-100 relative">
-      {/* Logo and Close Button */}
+
       <div className="flex h-16 shrink-0 items-center px-6 border-b border-border justify-between">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
@@ -56,7 +56,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         )}
       </div>
 
-      {/* Navigation */}
       <nav className="flex-1 space-y-1 px-4 py-6">
         {navigation.map((item) => {
           const isActive = pathname === item.href
@@ -79,7 +78,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         })}
       </nav>
 
-      {/* User section */}
       <div className="border-t border-border p-4">
         <div className="flex items-center gap-3 mb-3">
           <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
@@ -105,14 +103,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen bg-background">
-      {/* Desktop Sidebar */}
+
       {sidebarVisible && (
         <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-sidebar border-r border-sidebar-border z-50">
           <Sidebar />
         </div>
       )}
 
-      {/* Sidebar Toggle Button (Desktop) */}
       {!sidebarVisible && (
         <button
           className="hidden lg:block fixed top-4 left-4 z-50 bg-sidebar border border-sidebar-border rounded-full p-2 shadow hover:bg-sidebar-accent transition-colors"
@@ -123,16 +120,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </button>
       )}
 
-      {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-64 bg-sidebar">
           <Sidebar mobile />
         </SheetContent>
       </Sheet>
 
-      {/* Main Content */}
       <div className={`flex flex-1 flex-col ${sidebarVisible ? 'lg:pl-64' : ''}`}>
-        {/* Mobile Header */}
+
         <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-border bg-background px-4 lg:hidden">
           <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
             <SheetTrigger asChild>
@@ -149,7 +144,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </div>
 
-        {/* Page Content */}
         <main className="flex-1 overflow-auto">
           <div className="p-6">{children}</div>
         </main>

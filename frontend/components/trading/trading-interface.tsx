@@ -35,9 +35,8 @@ export function TradingInterface() {
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-      {/* Left Column - Chart and Market Stats */}
       <div className="xl:col-span-3 space-y-6">
-        {/* Asset Selection Dropdown */}
+  
         <div className="flex items-center gap-4 mb-2">
           <span className="font-semibold text-lg">Asset:</span>
           <Select value={selectedAsset} onValueChange={v => setSelectedAsset(v as "BTC" | "ETH" | "SOL") }>
@@ -52,19 +51,13 @@ export function TradingInterface() {
           </Select>
         </div>
 
-        {/* Trading Chart */}
         <TradingChart asset={selectedAsset} />
 
-  {/* Open Positions */}
   <OpenPositions />
       </div>
-
-      {/* Right Column - Trading Form and Order Book */}
       <div className="xl:col-span-1 space-y-6">
-        {/* Trading Form */}
         <TradingForm asset={selectedAsset} />
 
-        {/* Order Book */}
         <OrderBook asset={selectedAsset} />
       </div>
     </div>

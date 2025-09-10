@@ -81,10 +81,8 @@ export default function TradingViewChart({ data }: { data: OHLCData[] }) {
         console.log("Processing candle data", data[0]);
         const formatted = data
           .map((candle) => {
-            // Create a proper time value from the start date
             const time = convertToUTCTimestamp(candle.start || "");
             
-            // Parse numeric values
             const open = typeof candle.open === 'string' ? parseFloat(candle.open) : candle.open;
             const high = typeof candle.high === 'string' ? parseFloat(candle.high) : candle.high;
             const low = typeof candle.low === 'string' ? parseFloat(candle.low) : candle.low;
@@ -122,18 +120,14 @@ export default function TradingViewChart({ data }: { data: OHLCData[] }) {
   );
 }
 
-// Convert date string to UTC timestamp
 const convertToUTCTimestamp = (dateStr: string): UTCTimestamp => {
   try {
-    // Parse the date string
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) {
       console.error("Invalid date string:", dateStr);
-      // Fallback to current time if date is invalid
       return Math.floor(new Date().getTime() / 1000) as UTCTimestamp;
     }
     
-    // Convert to seconds (required by lightweight-charts)
     return Math.floor(date.getTime() / 1000) as UTCTimestamp;
   } catch (err) {
     console.error("Error converting timestamp:", err);

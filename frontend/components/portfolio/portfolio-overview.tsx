@@ -62,8 +62,7 @@ export function PortfolioOverview() {
   }
 
   const calculate24hChange = () => {
-    // Mock 24h change calculation
-    return Math.random() * 10 - 5 // Random between -5% and +5%
+    return Math.random() * 10 - 5 
   }
 
   if (loading) {
@@ -100,7 +99,7 @@ export function PortfolioOverview() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Total Portfolio Value */}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Value</CardTitle>
@@ -116,7 +115,6 @@ export function PortfolioOverview() {
         </CardContent>
       </Card>
 
-      {/* Available Balance */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
@@ -128,7 +126,6 @@ export function PortfolioOverview() {
         </CardContent>
       </Card>
 
-      {/* Total Assets */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Assets</CardTitle>
@@ -140,7 +137,7 @@ export function PortfolioOverview() {
         </CardContent>
       </Card>
 
-      {/* Largest Holding */}
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Largest Holding</CardTitle>

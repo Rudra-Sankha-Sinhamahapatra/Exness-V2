@@ -95,7 +95,7 @@ export function AssetAllocation() {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pie Chart */}
+   
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -120,7 +120,6 @@ export function AssetAllocation() {
             </ResponsiveContainer>
           </div>
 
-          {/* Asset Breakdown */}
           <div className="space-y-4">
             {assetData.map((asset) => (
               <div key={asset.name} className="space-y-2">

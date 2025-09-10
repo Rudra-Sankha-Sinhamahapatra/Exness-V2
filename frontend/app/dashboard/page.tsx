@@ -5,7 +5,6 @@ import { QuickTrade } from "@/components/dashboard/quick-trade"
 import { RecentTrades } from "@/components/dashboard/recent-trades"
 
 export default async function DashboardPage() {
-  // Auth check is now handled by middleware
 
   return (
     <DashboardLayout>
@@ -15,23 +14,18 @@ export default async function DashboardPage() {
           <div className="text-sm text-muted-foreground">Last updated: <span suppressHydrationWarning>{new Date().toLocaleTimeString()}</span></div>
         </div>
 
-        {/* Balance Overview */}
         <BalanceOverview />
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Market Overview - Takes 2 columns on large screens */}
           <div className="lg:col-span-2">
             <MarketOverview />
           </div>
 
-          {/* Quick Trade Panel */}
           <div className="lg:col-span-1">
             <QuickTrade />
           </div>
         </div>
 
-        {/* Recent Trades */}
         <RecentTrades />
       </div>
     </DashboardLayout>

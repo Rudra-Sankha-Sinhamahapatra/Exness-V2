@@ -17,7 +17,7 @@ export function MarketStats({ selectedAsset, onAssetChange, currentPrice,assetNa
     <Card>
       <CardContent className="p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          {/* Asset Selection */}
+
           <div className="flex items-center gap-4">
             <Tabs value={selectedAsset} onValueChange={(value) => onAssetChange(value as "BTC" | "ETH" | "SOL")}> 
               <TabsList>

@@ -41,15 +41,13 @@ export function TradingChart({ asset }: TradingChartProps) {
 
     fetchKlines();
     
-    // Set up polling for live updates
-    const timerId = setTimeout(fetchKlines, 30000); // Update every 30 seconds
+    const timerId = setTimeout(fetchKlines, 30000); 
     
     return () => {
       clearTimeout(timerId);
     };
   }, [asset, interval])
 
-  // Get latest candle for stats
   const latest = klineData.length > 0 ? klineData[klineData.length - 1] : undefined;
   const prev = klineData.length > 1 ? klineData[klineData.length - 2] : undefined;
   const currentPrice = latest ? (typeof latest.close === 'string' ? parseFloat(latest.close) : latest.close) : 0;
@@ -82,7 +80,7 @@ export function TradingChart({ asset }: TradingChartProps) {
                 {priceChange >= 0 ? "+" : ""}{priceChange.toFixed(2)} ({percentChange.toFixed(2)}%)
               </span>
             </div>
-            {/* Show volume, quoteVolume, trades for latest candle */}
+  
             <div className="flex gap-4 mt-1 text-xs text-muted-foreground">
               <span>Vol: <span className="text-white">{volume?.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></span>
               <span>QuoteVol: <span className="text-white">{quoteVolume?.toLocaleString(undefined, {maximumFractionDigits: 2})}</span></span>

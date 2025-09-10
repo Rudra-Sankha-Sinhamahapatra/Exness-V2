@@ -40,7 +40,7 @@ export function QuickTrade() {
         body: JSON.stringify({
           asset,
           type,
-          margin: Number.parseFloat(margin) * 100, // Convert to cents
+          margin: Number.parseFloat(margin) * 100, 
           leverage: Number.parseInt(leverage),
           slippage: Number.parseInt(slippage),
         }),

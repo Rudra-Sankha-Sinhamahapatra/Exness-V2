@@ -39,7 +39,7 @@ export function BalanceOverview() {
     }
 
     fetchBalance()
-    const interval = setInterval(fetchBalance, 30000) // Refresh every 30 seconds
+    const interval = setInterval(fetchBalance, 30000) 
     return () => clearInterval(interval)
   }, [])
 
@@ -50,9 +50,9 @@ export function BalanceOverview() {
   const calculateTotalUSD = () => {
     if (!balance) return 0
     const usdcValue = Number.parseFloat(formatBalance(balance.USDC.balance, balance.USDC.decimals))
-    const btcValue = Number.parseFloat(formatBalance(balance.BTC.balance, balance.BTC.decimals)) * 45000 // Mock BTC price
-    const ethValue = Number.parseFloat(formatBalance(balance.ETH.balance, balance.ETH.decimals)) * 3000 // Mock ETH price
-    const solValue = Number.parseFloat(formatBalance(balance.SOL.balance, balance.SOL.decimals)) * 100 // Mock SOL price
+    const btcValue = Number.parseFloat(formatBalance(balance.BTC.balance, balance.BTC.decimals))
+    const ethValue = Number.parseFloat(formatBalance(balance.ETH.balance, balance.ETH.decimals)) 
+    const solValue = Number.parseFloat(formatBalance(balance.SOL.balance, balance.SOL.decimals))
 
     return usdcValue + btcValue + ethValue + solValue
   }
@@ -89,7 +89,6 @@ export function BalanceOverview() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-      {/* Total Portfolio Value */}
       <Card className="md:col-span-2 lg:col-span-1">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Total Portfolio</CardTitle>
@@ -97,14 +96,9 @@ export function BalanceOverview() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">${totalUSD.toLocaleString()}</div>
-          <div className="flex items-center text-xs text-green-500">
-            <TrendingUp className="h-3 w-3 mr-1" />
-            +2.5% (24h)
-          </div>
         </CardContent>
       </Card>
 
-      {/* USDC Balance */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">USDC</CardTitle>
@@ -116,7 +110,6 @@ export function BalanceOverview() {
         </CardContent>
       </Card>
 
-      {/* BTC Balance */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">BTC</CardTitle>
@@ -128,7 +121,6 @@ export function BalanceOverview() {
         </CardContent>
       </Card>
 
-      {/* ETH Balance */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">ETH</CardTitle>
@@ -140,7 +132,6 @@ export function BalanceOverview() {
         </CardContent>
       </Card>
 
-      {/* SOL Balance */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">SOL</CardTitle>

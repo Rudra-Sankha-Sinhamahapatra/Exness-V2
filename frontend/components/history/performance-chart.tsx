@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts"
 
-// Mock performance data
 const generatePerformanceData = (days: number) => {
   const data = []
   let cumulativePnL = 0
@@ -14,8 +13,7 @@ const generatePerformanceData = (days: number) => {
     const date = new Date()
     date.setDate(date.getDate() - (days - i))
 
-    // Simulate daily P&L with some volatility
-    const dailyPnL = (Math.random() - 0.4) * 200 // Slightly positive bias
+    const dailyPnL = (Math.random() - 0.4) * 200
     cumulativePnL += dailyPnL
 
     data.push({

@@ -46,14 +46,6 @@ export function TradingForm({ asset }: TradingFormProps) {
       return
     }
 
-    // if (orderType === "limit" && (!limitPrice || Number.parseFloat(limitPrice) <= 0)) {
-    //   toast({
-    //     title: "Invalid limit price",
-    //     description: "Please enter a valid limit price",
-    //     variant: "destructive",
-    //   })
-    //   return
-    // }
 
     setIsLoading(true)
 
@@ -111,22 +103,7 @@ export function TradingForm({ asset }: TradingFormProps) {
         <Tabs value={orderType} onValueChange={(value) => setOrderType(value as "market")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="market">Market</TabsTrigger>
-            {/* <TabsTrigger value="limit">Limit</TabsTrigger> */}
           </TabsList>
-
-          {/* <TabsContent value="limit" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="limit-price">Limit Price (USD)</Label>
-              <Input
-                id="limit-price"
-                type="number"
-                placeholder="Enter limit price"
-                value={limitPrice}
-                onChange={(e) => setLimitPrice(e.target.value)}
-                step="0.01"
-              />
-            </div>
-          </TabsContent> */}
         </Tabs>
 
         <div className="space-y-4 mt-4">
@@ -172,7 +149,6 @@ export function TradingForm({ asset }: TradingFormProps) {
             </Select>
           </div>
 
-          {/* Position Calculator */}
           {margin && (
             <div className="p-3 bg-muted rounded-lg space-y-2">
               <div className="text-sm font-medium">Position Details</div>

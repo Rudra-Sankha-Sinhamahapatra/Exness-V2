@@ -21,13 +21,10 @@ export default async function HistoryPage() {
           <div className="text-sm text-muted-foreground">Track your trading performance</div>
         </div>
 
-        {/* Analytics Overview */}
         <TradeAnalytics />
 
-        {/* Performance Chart */}
         <PerformanceChart />
 
-        {/* Trade History Table */}
         <TradeHistoryTable />
       </div>
     </DashboardLayout>

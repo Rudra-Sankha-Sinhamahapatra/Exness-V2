@@ -54,7 +54,6 @@ export function RecentTrades() {
     try {
       const response = await apiService.trading.closePosition(orderId)
       if (response && response.orderId) {
-        // Refresh the trades list
         fetchOpenTrades()
       }
     } catch (error) {
