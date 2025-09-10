@@ -316,6 +316,7 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
             status: trade.closePrice ? 'closed' : 'open',
             liquidated: trade.liquidated,
             createdAt: trade.createdAt,
+            tradeType:trade.tradeType,
             duration: calculateDuration(trade.createdAt, new Date()),
             pnlPercentage: calculatePnlPercentage(trade),
             isProfitable: trade.pnl !== null && trade.pnl > 0,

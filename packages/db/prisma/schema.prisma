@@ -34,6 +34,7 @@ model ExistingTrade {
   user       User     @relation(fields: [userId], references: [id])
   userId     String
   createdAt  DateTime @default(now())
+  tradeType  TradeType
 
   @@index([userId, createdAt])
   @@index([assetId,createdAt])
@@ -46,4 +47,9 @@ model Asset {
   name           String
   decimals       Int
   existingTrades ExistingTrade[]
+}
+
+enum TradeType {
+  SHORT
+  LONG
 }

@@ -12,6 +12,7 @@ export async function processDBOperation(operation: string, data: any) {
                     create: { email: data.email}
                 });
 
+                const type = data.type === 'short' ? 'SHORT' : 'LONG'
                 await prisma.existingTrade.create({
                     data: {
                         orderId: data.orderId,
@@ -19,7 +20,8 @@ export async function processDBOperation(operation: string, data: any) {
                         leverage: data.leverage,
                         liquidated: data.liquidated,
                         asset: { connect: {id: data.assetId }},
-                        user: { connect: {id: user.id }}
+                        user: { connect: {id: user.id }},
+                        tradeType: type
                     }
                 });
 
