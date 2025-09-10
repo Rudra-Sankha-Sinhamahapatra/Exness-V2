@@ -160,7 +160,8 @@ export async function Processor(event: string | undefined, data: EventData) {
                     openPrice,
                     leverage: data.leverage,
                     liquidated: false,
-                    assetId: existingAsset.id
+                    assetId: existingAsset.id,
+                    tradeType: data.type 
                 })
 
                 console.log('Trade executed:', result);
