@@ -67,7 +67,7 @@ export function TradingChart({ asset }: TradingChartProps) {
               <img
                 src={Asssets.find((assset) => asset === assset.symbol)?.imageUrl}
                 alt={asset}
-                className="w-6 h-6 inline-block"
+                className="w-6 h-6 inline-block rouded-full"
               /> {asset} Chart
               {loading && <LoaderCircle className="animate-spin h-4 w-4" />}
             </CardTitle>

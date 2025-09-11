@@ -8,7 +8,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { BarChart3, Wallet, TrendingUp, History, Settings, LogOut, Menu, User, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { BACKEND_URL } from "@/config"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: BarChart3 },
@@ -27,12 +28,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarVisible, setSidebarVisible] = useState(true)
   const pathname = usePathname()
+const router = useRouter();
 
-  const handleLogout = () => {
-    document.cookie = "authToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;"
-    window.location.href = "/signin"
-  }
-
+  const handleLogout = async () => {
+    try {
+      await fetch(`${BACKEND_URL}/api/v1/logout`, {
+        method: "POST",
+        credentials: "include", 
+      });
+    } catch (err) {
+      console.error("Logout error", err);
+    } finally {
+      router.push("/signin");
+      router.refresh();
+    }
+  };
+  
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div className="flex h-full flex-col z-100 relative">
 

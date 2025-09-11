@@ -1,4 +1,4 @@
-import { signup, signin, authPost } from "../controllers/auth";
+import { signup, signin, authPost, logout } from "../controllers/auth";
 import { authMiddleware } from "../authMiddleware";
 import { getUsdcBalance, getUserBalance } from "../controllers/balance";
 import { supportedAssets, upsertAssets } from "../controllers/assets";
@@ -12,6 +12,10 @@ export async function router(req: Request): Promise<Response> {
         const path = url.pathname.replace("/api/v1", "");
 
         if (req.method === "POST") {
+            if (path === "/logout") {
+                return await logout(req);
+              }
+        
             try {
                 const validation = req.clone();
                 await validation.json(); 

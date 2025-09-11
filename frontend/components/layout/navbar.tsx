@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useRouter } from "next/navigation";
+import { BACKEND_URL } from "@/config";
 
 type Props = {
   isAuthenticated: boolean;
@@ -25,8 +26,18 @@ export default function NavbarClient({ isAuthenticated: initialAuth }: Props) {
 
 
   const handleLogout = async () => {
-    router.push("/signin");
-    router.refresh();
+    try {
+      await fetch(`${BACKEND_URL}/api/v1/logout`, {
+        method: "POST",
+        credentials: "include", 
+      });
+    } catch (err) {
+      console.error("Logout error", err);
+    } finally {
+      router.push("/signin");
+      setIsAuthenticated(false); 
+      router.refresh();
+    }
   };
 
   return (

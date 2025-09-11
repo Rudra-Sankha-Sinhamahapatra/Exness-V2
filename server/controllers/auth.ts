@@ -126,3 +126,24 @@ export const authPost = async (req: Request): Promise<Response> => {
         }, 500);
     }
 }
+
+export const logout = async (_req: Request): Promise<Response> => {
+    try {
+      return new Response(
+        JSON.stringify({ message: "Logged out" }),
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+            "Set-Cookie": `authToken=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
+          }
+        }
+      );
+    } catch (error) {
+      return jsonResponse(
+        { message: "Internal Server Error", error: String(error) },
+        500
+      );
+    }
+  };
+  

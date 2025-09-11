@@ -25,7 +25,7 @@ export function MarketStats({ selectedAsset, onAssetChange, currentPrice,assetNa
                   <img
                     src={Asssets.find((assset) => "BTC" === assset.symbol)?.imageUrl}
                     alt="BTC"
-                             className="w-6 h-6 inline-block"
+                             className="w-6 h-6 inline-block rounded-full"
                   />
                   BTC
                 </TabsTrigger>
@@ -33,7 +33,7 @@ export function MarketStats({ selectedAsset, onAssetChange, currentPrice,assetNa
                     <img
                     src={Asssets.find((assset) => "ETH" === assset.symbol)?.imageUrl}
                     alt="ETH"
-                             className="w-6 h-6 inline-block"
+                             className="w-6 h-6 inline-block rounded-full"
                   />
                   ETH
                   </TabsTrigger>
@@ -41,7 +41,7 @@ export function MarketStats({ selectedAsset, onAssetChange, currentPrice,assetNa
                     <img
                     src={Asssets.find((assset) => "SOL" === assset.symbol)?.imageUrl}
                     alt="SOL"
-                    className="w-6 h-6 inline-block"
+                    className="w-6 h-6 inline-block rounded-full"
                   />
                   SOL
                   </TabsTrigger>
