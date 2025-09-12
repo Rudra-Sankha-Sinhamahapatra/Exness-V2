@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { waitForResponse } from "../utils/waitForResponse";
 import { jsonResponse } from "../utils/jsonResponse";
 import { prisma } from "@exness/db";
+import { getSecondsUntilNextUTCmidnight } from "../utils/getExpiry";
 
 /**
  * Calculate the duration between two dates in a human-readable format
@@ -10,22 +11,22 @@ import { prisma } from "@exness/db";
 function calculateDuration(startDate: Date, endDate: Date): string {
     const durationMs = endDate.getTime() - startDate.getTime();
     const seconds = Math.floor(durationMs / 1000);
-    
+
     if (seconds < 60) {
         return `${seconds}s`;
     }
-    
+
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) {
         return `${minutes}m`;
     }
-    
+
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     if (hours < 24) {
         return `${hours}h ${remainingMinutes}m`;
     }
-    
+
     const days = Math.floor(hours / 24);
     const remainingHours = hours % 24;
     return `${days}d ${remainingHours}h`;
@@ -36,12 +37,12 @@ function calculatePnlPercentage(trade: any): number | null {
     if (trade.pnl === null || trade.closePrice === null) {
         return null;
     }
-    
+
     const initialMargin = parseFloat(trade.openPrice) / parseFloat(trade.leverage);
     if (initialMargin === 0) {
         return 0;
     }
-    
+
     return (parseFloat(trade.pnl) / initialMargin) * 100;
 }
 
@@ -66,7 +67,7 @@ interface TradeResponse {
 
 export const createTrade = async (req: Request): Promise<Response> => {
     try {
-          const email = (req as any).user?.email;
+        const email = (req as any).user?.email;
         if (!email) {
             return jsonResponse({
                 success: false,
@@ -74,48 +75,48 @@ export const createTrade = async (req: Request): Promise<Response> => {
             }, 401);
         }
 
-         const tradeData: CreateTradeRequest = await req.json() as CreateTradeRequest;
+        const tradeData: CreateTradeRequest = await req.json() as CreateTradeRequest;
 
-  if(tradeData.margin <= 99) {
+        if (tradeData.margin <= 99) {
             return jsonResponse({
                 success: false,
                 message: "Margin must be greater than 0.99"
             }, 400);
         }
 
-         if(!['SOL', 'ETH', 'BTC'].includes(tradeData.asset)) {
+        if (!['SOL', 'ETH', 'BTC'].includes(tradeData.asset)) {
             return jsonResponse({
                 success: false,
                 message: "Invalid asset. Supported assets are SOL, ETH, BTC"
             }, 400);
         }
 
-        if(!['long', 'short'].includes(tradeData.type)) {
+        if (!['long', 'short'].includes(tradeData.type)) {
             return jsonResponse({
                 success: false,
                 message: "Invalid trade type. Supported types are long and short"
             }, 400);
         }
 
-        if(tradeData.leverage < 1 || tradeData.leverage > 100) {
+        if (tradeData.leverage < 1 || tradeData.leverage > 100) {
             return jsonResponse({
                 success: false,
                 message: "Leverage must be between 1 and 100"
             }, 400);
         }
 
-           if(tradeData.slippage > 10000 || tradeData.slippage < 10) {
+        if (tradeData.slippage > 10000 || tradeData.slippage < 10) {
             return jsonResponse({
                 success: false,
                 message: "Slippage value should be between 0.1 to 100 %"
             }, 400);
         }
 
-      const currentPrice =  await redis.get(`price-${tradeData.asset}`);
+        const currentPrice = await redis.get(`price-${tradeData.asset}`);
 
-      console.log("Current server price: ", currentPrice);
+        console.log("Current server price: ", currentPrice);
 
-           if (!currentPrice) {
+        if (!currentPrice) {
             return jsonResponse({
                 success: false,
                 message: "Current price not available for the selected asset"
@@ -132,7 +133,7 @@ export const createTrade = async (req: Request): Promise<Response> => {
 
         await REDIS_PUSH_QUEUE.lpush(QUEUE_CHANNEL, JSON.stringify({
             email,
-            currentPrice:  tradeTimeVal.price,
+            currentPrice: tradeTimeVal.price,
             event: QUEUE_EVENT,
             responseChannel,
             orderId,
@@ -145,9 +146,9 @@ export const createTrade = async (req: Request): Promise<Response> => {
             throw new Error(response.error || "Trade failed");
         }
 
-      return jsonResponse({ orderId });
+        return jsonResponse({ orderId });
     } catch (error) {
-     console.error("Trade error:", error);
+        console.error("Trade error:", error);
         return jsonResponse({
             error: error instanceof Error ? error.message : "Internal server error"
         }, 500);
@@ -162,7 +163,7 @@ export const closeTrade = async (req: Request): Promise<Response> => {
             return jsonResponse({ error: "Unauthorized" }, 401);
         }
 
-        const { orderId } = await req.json() as { orderId: string};
+        const { orderId } = await req.json() as { orderId: string };
         if (!orderId) {
             return jsonResponse({ message: "Order Id is required" }, 400);
         }
@@ -185,10 +186,10 @@ export const closeTrade = async (req: Request): Promise<Response> => {
             throw new Error(response.error || "Failed to close trade");
         }
 
-   return jsonResponse({ orderId });
+        return jsonResponse({ orderId });
 
     } catch (error) {
-           console.error("Trade close error:", error);
+        console.error("Trade close error:", error);
         return jsonResponse({
             error: error instanceof Error ? error.message : "Internal server error"
         }, 500);
@@ -206,19 +207,32 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
         }
 
         const url = new URL(req.url);
-        
+
+        const cacheOnly = url.searchParams.get('cacheOnly') === 'true';
+
         const status = url.searchParams.get('status');
         const asset = url.searchParams.get('asset');
-        const tradeType = url.searchParams.get('tradeType'); 
-        const profitable = url.searchParams.get('profitable'); 
+        const tradeType = url.searchParams.get('tradeType');
+        const profitable = url.searchParams.get('profitable');
         const liquidated = url.searchParams.get('liquidated');
         const fromDate = url.searchParams.get('fromDate');
         const toDate = url.searchParams.get('toDate');
-        
+
         const limit = parseInt(url.searchParams.get('limit') || '50');
         const offset = parseInt(url.searchParams.get('offset') || '0');
         const sortBy = url.searchParams.get('sortBy') || 'createdAt';
         const sortOrder = url.searchParams.get('sortOrder') || 'desc';
+
+                const cacheKey = `tradeHistory:${email}:${status || 'all'}:${asset || 'all'}:${tradeType || 'all'}:${profitable || 'all'}:${liquidated || 'all'}:${fromDate || 'all'}:${toDate || 'all'}:${limit}:${offset}:${sortBy}:${sortOrder}`;
+
+        if(cacheOnly){
+            console.log(cacheOnly)
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            console.log("got cached key")
+            return new Response(cached, { status: 200, headers: { "Content-Type": "application/json" } });
+        }
+    }
 
         const whereClause: any = {
             user: {
@@ -260,7 +274,7 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
                 gte: new Date(fromDate)
             };
         }
-        
+
         if (toDate) {
             whereClause.createdAt = {
                 ...(whereClause.createdAt || {}),
@@ -290,6 +304,10 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
             skip: offset
         });
 
+        if(tradeData) {
+            console.log("Querying dB")
+        }
+
         if (!tradeData.length) {
             return jsonResponse({
                 success: true,
@@ -316,7 +334,7 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
             status: trade.closePrice ? 'closed' : 'open',
             liquidated: trade.liquidated,
             createdAt: trade.createdAt,
-            tradeType:trade.tradeType,
+            tradeType: trade.tradeType,
             duration: calculateDuration(trade.createdAt, new Date()),
             pnlPercentage: calculatePnlPercentage(trade),
             isProfitable: trade.pnl !== null && trade.pnl > 0,
@@ -332,7 +350,7 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
             liquidatedTrades: formattedTrades.filter(t => t.liquidated).length,
         };
 
-        return jsonResponse({
+        const responseBody = JSON.stringify({
             success: true,
             data: formattedTrades,
             analytics,
@@ -343,6 +361,9 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
                 hasMore: offset + limit < totalCount
             }
         });
+        await redis.set(cacheKey, responseBody, "EX", getSecondsUntilNextUTCmidnight());
+        console.log("expiry: ", getSecondsUntilNextUTCmidnight())
+        return new Response(responseBody, { status: 200, headers: { "Content-Type": "application/json" } });
 
     } catch (error) {
         console.error("Get trade history error:", error);

@@ -4,15 +4,18 @@ import { BACKEND_URL, FRONTEND_URL } from "../config";
 import { REDIS_PUSH_QUEUE } from "../redis";
 import { prisma } from "@exness/db";
 import { jsonResponse } from "../utils/jsonResponse";
-
+ 
 async function SendAuthEmail(email: string, type: "signup" | "signin", token: string) {
     const link = `${BACKEND_URL}/api/v1/signin/post?token=${token}`;
-    await resendClient.emails.send({
-        from: 'onboarding@resend.dev',
+    console.log(email)
+    console.log(link) 
+    const res = await resendClient.emails.send({
+        from: 'tradingpro@mail.rudrasankha.com',
         to: email,
         subject: type === "signup" ? "Signup Confirmation" : "Signin Link",
         html: `<p>Your ${type} link is: <a href="${link}">${link}</a></p>`,
     });
+    console.log(res)
 }
 
 export const signup = async (req: Request): Promise<Response> => {
