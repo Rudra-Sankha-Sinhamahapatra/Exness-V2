@@ -28,7 +28,7 @@ export function TradeAnalytics() {
       setLoading(true)
       setError(null)
       try {
-        const response = await apiService.trading.getHistory({ limit: 100 })
+        const response = await apiService.trading.getHistory({ limit: 100,cacheOnly: true })
         if (response.success && response.analytics) {
 
           const trades = response.data || []
@@ -53,7 +53,10 @@ export function TradeAnalytics() {
             largestLoss: Number(largestLoss.toFixed(2)),
             profitFactor: Number(profitFactor.toFixed(2)),
           })
-        } else {
+        } else if(response.success && !response.analytics){
+         setError("You haven't traded anything")
+        } 
+        else {
           setError(response.error || "Failed to load analytics")
         }
       } catch (err: any) {

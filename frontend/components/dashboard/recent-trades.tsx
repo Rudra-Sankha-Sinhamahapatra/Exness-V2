@@ -78,19 +78,26 @@ export function RecentTrades() {
             trades.map((trade) => (
               <div key={trade.id} className="flex items-center justify-between p-4 border border-border rounded-lg">
                 <div className="flex items-center gap-4">
-                   <div>
-                      Open Price: ${trade.openPrice}
+                  {trade.assetImage && (
+                    <img src={trade.assetImage} alt={trade.assetName || trade.asset} className="h-8 w-8 rounded-full bg-muted" />
+                  )}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      {trade.tradeType === "long" ? (
+                        <TrendingUp className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <TrendingDown className="h-4 w-4 text-red-500" />
+                      )}
+                      <span className="font-medium">{trade.asset}</span>
+                      <Badge variant={trade.tradeType === "long" ? "default" : "destructive"}>{trade.tradeType.toUpperCase()}</Badge>
                     </div>
-                  <div className="flex items-center gap-2">
-                    {trade.tradeType === "long" ? (
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <TrendingDown className="h-4 w-4 text-red-500" />
-                    )}
-                    <span className="font-medium">{trade.asset}</span>
-                    <Badge variant={trade.tradeType === "long" ? "default" : "destructive"}>{trade.tradeType.toUpperCase()}</Badge>
+                    <div className="flex gap-2 text-xs text-muted-foreground">
+                      <span>Open: <span className="font-semibold text-foreground">${trade.openPrice}</span></span>
+                      {trade.closePrice !== undefined && trade.closePrice !== null && (
+                        <span>Close: <span className="font-semibold text-foreground">${trade.closePrice}</span></span>
+                      )}
+                    </div>
                   </div>
-
                   <div className="text-sm text-muted-foreground">
                     ${trade.margin} • {trade.leverage}x
                   </div>
@@ -102,7 +109,6 @@ export function RecentTrades() {
                       {trade.pnl && trade.pnl >= 0 ? "+" : ""}${trade.pnl && trade.pnl.toFixed(2)}
                     </div>
                     <div className="text-xs text-muted-foreground" suppressHydrationWarning>{new Date(trade.createdAt).toLocaleTimeString()}</div>
-                   {trade.closePrice ?? <div>Closed at: ${trade.closePrice}</div>}
                   </div>
 
                   {trade.status === "open" && (

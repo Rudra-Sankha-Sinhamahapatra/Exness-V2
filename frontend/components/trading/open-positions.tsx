@@ -26,7 +26,7 @@ type Position = {
 }
 
 
-export function OpenPositions() {
+export function OpenPositions({ refreshKey, onPositionClosed }: { refreshKey?: number; onPositionClosed?: () => void }) {
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -63,7 +63,7 @@ export function OpenPositions() {
 
   useEffect(() => {
     fetchPositions()
-  }, [])
+  }, [refreshKey])
 
   const handleClosePosition = async (positionId: string) => {
     try {
@@ -82,6 +82,7 @@ export function OpenPositions() {
           title: "Position closed",
           description: "Your position has been successfully closed",
         })
+        if (onPositionClosed) onPositionClosed();
       } else {
         toast({
           title: "Failed to close position",

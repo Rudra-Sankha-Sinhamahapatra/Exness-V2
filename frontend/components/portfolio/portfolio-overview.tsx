@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { TrendingUp, TrendingDown, Wallet, DollarSign, PieChart } from "lucide-react"
+import { TrendingUp, Wallet, DollarSign, PieChart } from "lucide-react"
 import { BACKEND_URL } from "@/config"
 
 interface Balance {
@@ -61,9 +61,6 @@ export function PortfolioOverview() {
     return usdcValue + btcValue + ethValue + solValue
   }
 
-  const calculate24hChange = () => {
-    return Math.random() * 10 - 5 
-  }
 
   if (loading) {
     return (
@@ -94,8 +91,6 @@ export function PortfolioOverview() {
   }
 
   const totalValue = calculateTotalValue()
-  const change24h = calculate24hChange()
-  const isPositive = change24h >= 0
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -107,11 +102,6 @@ export function PortfolioOverview() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">${totalValue.toLocaleString()}</div>
-          <div className={`flex items-center text-xs ${isPositive ? "text-green-500" : "text-red-500"}`}>
-            {isPositive ? <TrendingUp className="h-3 w-3 mr-1" /> : <TrendingDown className="h-3 w-3 mr-1" />}
-            {isPositive ? "+" : ""}
-            {change24h.toFixed(2)}% (24h)
-          </div>
         </CardContent>
       </Card>
 

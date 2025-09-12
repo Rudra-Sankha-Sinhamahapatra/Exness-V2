@@ -63,7 +63,7 @@ export function OrderBook({ asset }: OrderBookProps) {
       }
     };
     fetchOrderBook();
-    const interval = setInterval(fetchOrderBook, 5000);
+    const interval = setInterval(fetchOrderBook, 15000);
     return () => {
       isMounted = false;
       clearInterval(interval);

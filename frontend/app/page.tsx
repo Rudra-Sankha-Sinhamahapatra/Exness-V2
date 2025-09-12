@@ -1,5 +1,6 @@
 "use client"
 
+import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { TrendingUp, Shield, Zap, BarChart3, Users, Globe } from "lucide-react"
@@ -129,6 +130,7 @@ export default function LandingPage() {
           </Link>
         </div>
       </section>
+                <Footer />
     </div>
   )
 }

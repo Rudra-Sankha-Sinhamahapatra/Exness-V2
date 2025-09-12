@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { TrendingUp, Mail, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { apiService } from "@/lib/api-service"
 
 export default function SignUpPage() {
   const [email, setEmail] = useState("")
@@ -23,13 +24,8 @@ export default function SignUpPage() {
     setMessage("")
 
     try {
-      const response = await fetch("http://localhost:3001/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      if (response.ok) {
+      const response = await apiService.auth.register(email);
+      if (response.message === "Kindly check your mail for the signup link") {
         setMessage("Account created! Check your email for a magic link to sign in.")
       } else {
         const data = await response.json()

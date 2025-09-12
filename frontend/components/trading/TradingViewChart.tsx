@@ -35,6 +35,7 @@ export default function TradingViewChart({ data }: { data: OHLCData[] }) {
         timeVisible: true, 
         borderColor: "#3a4453",
         secondsVisible: false,
+        minBarSpacing: 8, 
       },
       rightPriceScale: { borderColor: "#3a4453" },
     });
@@ -105,6 +106,14 @@ export default function TradingViewChart({ data }: { data: OHLCData[] }) {
         console.log("Formatted data:", formatted[0]);
         seriesRef.current.setData(formatted);
         chartRef.current?.timeScale().fitContent();
+  
+        if (formatted.length > 0) {
+          const barsToShow = Math.min(60, formatted.length); 
+          chartRef.current?.timeScale().setVisibleRange({
+            from: formatted[formatted.length - barsToShow]?.time ?? formatted[0].time,
+            to: formatted[formatted.length - 1].time,
+          });
+        }
       } catch (err) {
         console.error("Error processing candle data:", err);
       }
@@ -114,7 +123,7 @@ export default function TradingViewChart({ data }: { data: OHLCData[] }) {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full rounded-lg"
+      className="w-full h-[500px] rounded-lg"
       style={{ background: "#000" }}
     />
   );

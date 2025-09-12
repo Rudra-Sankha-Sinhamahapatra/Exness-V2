@@ -46,7 +46,7 @@ export default function NavbarClient({ isAuthenticated: initialAuth }: Props) {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center space-x-2">
             <TrendingUp className="h-8 w-8 text-purple-400" />
-            <span className="text-xl font-bold text-white">CryptoTrade Pro</span>
+            <span className="text-xl font-bold text-white"></span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-8">

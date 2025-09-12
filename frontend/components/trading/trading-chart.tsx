@@ -99,7 +99,7 @@ export function TradingChart({ asset }: TradingChartProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="h-96 relative">
+        <div className="h-[500px] relative">
           {loading && klineData.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center bg-card/50 z-10">
               <div className="flex flex-col items-center gap-2">

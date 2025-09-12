@@ -16,9 +16,15 @@ export default async function DashboardPage() {
 
         <BalanceOverview />
 
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <MarketOverview />
+            <div className="h-full flex items-center justify-center">
+              <div className="bg-card border border-border rounded-lg p-6 w-full flex flex-col items-center justify-center">
+                <span className="text-lg font-semibold text-foreground mb-2">Welcome to your Dashboard</span>
+                <span className="text-muted-foreground text-sm text-center">Track your balance, recent trades, and quick actions here. For full market analytics and charts, visit the <b>Markets</b> page.</span>
+              </div>
+            </div>
           </div>
 
           <div className="lg:col-span-1">

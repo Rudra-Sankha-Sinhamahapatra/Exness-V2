@@ -6,17 +6,18 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Slider } from "@/components/ui/slider"
 import { useToast } from "@/hooks/use-toast"
 import { TrendingUp, TrendingDown, Calculator } from "lucide-react"
 import { BACKEND_URL } from "@/config"
 
 interface TradingFormProps {
-  asset: "BTC" | "ETH" | "SOL"
+  asset: "BTC" | "ETH" | "SOL",
+  onTradeSuccess?: () => void
 }
 
-export function TradingForm({ asset }: TradingFormProps) {
+export function TradingForm({ asset,onTradeSuccess }: TradingFormProps) {
   const [orderType, setOrderType] = useState<"market">("market")
   const [margin, setMargin] = useState("")
   const [leverage, setLeverage] = useState([10])
@@ -68,11 +69,14 @@ export function TradingForm({ asset }: TradingFormProps) {
       const data = await response.json()
 
       if (response.ok) {
+        setMargin("");
         toast({
           title: "Trade executed",
           description: `${type.toUpperCase()} position opened for ${asset}`,
-        })
-        setMargin("")
+        });
+        setTimeout(() => {
+          if (onTradeSuccess) onTradeSuccess();
+        }, 500);
       } else {
         toast({
           title: "Trade failed",

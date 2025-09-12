@@ -12,6 +12,7 @@ import { apiService } from "@/lib/api-service"
 import { Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { TradeDetailsDialog } from "./trade-details-dialog"
+import { useRouter } from "next/navigation"
 
 interface Trade {
   id: string
@@ -46,6 +47,7 @@ export function TradeHistoryTable() {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const router = useRouter();
 
   useEffect(() => {
     const fetchTrades = async () => {
@@ -54,6 +56,7 @@ export function TradeHistoryTable() {
         const filters: any = {
           sortBy,
           sortOrder,
+          cacheOnly: true
         }
         
         if (assetFilter !== "all") {
@@ -160,7 +163,7 @@ export function TradeHistoryTable() {
     <Card>
       <CardHeader>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <CardTitle>Trade History</CardTitle>
+          <CardTitle>Trade History</CardTitle> 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -184,7 +187,7 @@ export function TradeHistoryTable() {
               </SelectContent>
             </Select>
 
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
+            {/* <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-24">
                 <SelectValue />
               </SelectTrigger>
@@ -193,7 +196,7 @@ export function TradeHistoryTable() {
                 <SelectItem value="long">Long</SelectItem>
                 <SelectItem value="short">Short</SelectItem>
               </SelectContent>
-            </Select>
+            </Select> */}
             
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-24">
@@ -212,6 +215,12 @@ export function TradeHistoryTable() {
             </Button>
           </div>
         </div>
+          <CardContent className="my-4">These trades are cached only.It gets reset every day at midnight 00:00 UTC. If you want to view latest, go to 
+             <span
+          className="pl-2 text-blue-500 cursor-pointer underline"
+          onClick={() => {
+            router.push("/dashboard");
+          }}>Dashboard</span></CardContent>
       </CardHeader>
       <CardContent>
         {loading ? (

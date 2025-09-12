@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { TrendingUp, Mail, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { apiService } from "@/lib/api-service"
 
 export default function SignInPage() {
   const [email, setEmail] = useState("")
@@ -23,20 +24,15 @@ export default function SignInPage() {
     setMessage("")
 
     try {
-      const response = await fetch("http://localhost:3001/signin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
-
-      if (response.ok) {
+      const response = await apiService.auth.login(email)
+      if (response.message === "Kindly check your mail for the signin link") {
         setMessage("Check your email for a magic link to sign in!")
       } else {
-        const data = await response.json()
-        setError(data.error || "Failed to send magic link")
+       setError(response.message || response.error || "Failed to send magic link")
       }
-    } catch (err) {
-      setError("Network error. Please try again.")
+    } catch (err:any) {
+      console.log(err)
+      setError(err?.message || "Network error. Please try again.")
     } finally {
       setIsLoading(false)
     }

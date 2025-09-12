@@ -11,7 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export function TradingInterface() {
   const [selectedAsset, setSelectedAsset] = useState<"BTC" | "ETH" | "SOL">("BTC")
+  const [refreshKey,setRefreshKey] = useState(0);
 
+  const handleTradeSuccess = () => setRefreshKey((k) => k + 1);
   useEffect(() => {
     let isMounted = true;
     const fetchPrice = async () => {
@@ -53,10 +55,10 @@ export function TradingInterface() {
 
         <TradingChart asset={selectedAsset} />
 
-  <OpenPositions />
+  <OpenPositions refreshKey={refreshKey} onPositionClosed={handleTradeSuccess} />
       </div>
       <div className="xl:col-span-1 space-y-6">
-        <TradingForm asset={selectedAsset} />
+        <TradingForm asset={selectedAsset} onTradeSuccess={handleTradeSuccess} />
 
         <OrderBook asset={selectedAsset} />
       </div>

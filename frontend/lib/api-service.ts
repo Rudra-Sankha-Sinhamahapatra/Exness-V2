@@ -34,7 +34,7 @@ export const apiService = {
     const config: RequestInit = {
       method,
       headers: requestHeaders,
-      credentials: 'include', // Always include credentials for cookies
+      credentials: 'include', 
     };
 
     if (body && method !== 'GET') {
@@ -57,17 +57,17 @@ export const apiService = {
   },
 
   auth: {
-    login: (email: string, password: string) => 
-      apiService.request('/api/v1/auth/login', {
+    login: (email: string) => 
+      apiService.request('/api/v1/signin', {
         method: 'POST',
-        body: { email, password },
+        body: { email },
         requiresAuth: false,
       }),
     
-    register: (email: string, password: string, name: string) => 
-      apiService.request('/api/v1/auth/register', {
+    register: (email: string) => 
+      apiService.request('/api/v1/signup', {
         method: 'POST',
-        body: { email, password, name },
+        body: { email },
         requiresAuth: false,
       }),
     
@@ -78,7 +78,7 @@ export const apiService = {
   market: {
     getKlines: (asset: string, interval: string) => 
       apiService.request(`/api/v1/klines?asset=${asset}&interval=${interval}`, {
-        requiresAuth: false, // Public endpoint
+        requiresAuth: false,
       }),
     
     getAssets: () => 
@@ -87,21 +87,13 @@ export const apiService = {
       }),
   },
 
-  trading: {
-    openPosition: (asset: string, type: 'long' | 'short', margin: number, leverage: number) => 
-      apiService.request('/api/v1/trade/open', {
-        method: 'POST',
-        body: { asset, type, margin, leverage },
-      }),
-    
+  trading: {    
     closePosition: (orderId: string) => 
       apiService.request('/api/v1/trade/close', {
         method: 'POST',
         body: { orderId },
       }),
     
-    getPositions: () => 
-      apiService.request('/api/v1/trade/positions'),
     
     getHistory: (filters?: {
       status?: 'open' | 'closed',
@@ -114,6 +106,7 @@ export const apiService = {
       limit?: number,
       offset?: number,
       sortBy?: string,
+      cacheOnly?:boolean,
       sortOrder?: 'asc' | 'desc'
     }) => {
       const params = new URLSearchParams();
@@ -128,28 +121,6 @@ export const apiService = {
       
       const queryString = params.toString() ? `?${params.toString()}` : '';
       return apiService.request(`/api/v1/trade/history${queryString}`);
-    },
-    
-    getAllTrades: (filters?: {
-      status?: 'open' | 'closed',
-      asset?: string,
-      limit?: number,
-      offset?: number,
-      sortBy?: string,
-      sortOrder?: 'asc' | 'desc'
-    }) => {
-      const params = new URLSearchParams();
-      
-      if (filters) {
-        Object.entries(filters).forEach(([key, value]) => {
-          if (value !== undefined) {
-            params.append(key, String(value));
-          }
-        });
-      }
-      
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      return apiService.request(`/api/v1/trade/all${queryString}`);
     },
   },
 
