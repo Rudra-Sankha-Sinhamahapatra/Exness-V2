@@ -15,11 +15,12 @@ interface TradingChartProps {
 
 
 export function TradingChart({ asset }: TradingChartProps) {
-  const [interval, setInterval] = useState("1h")
+  const [interval, setChartInterval] = useState("1h")
   const [klineData, setKlineData] = useState<OHLCData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+      let isMounted = true;
     const fetchKlines = async () => {
       setLoading(true)
       try {
@@ -28,23 +29,25 @@ export function TradingChart({ asset }: TradingChartProps) {
         if (response.ok) {
           const data = await response.json()
           console.log("Klines data received:", data.slice(0, 2))
-          setKlineData(data)
+        if (isMounted) setKlineData(data)
         } else {
           console.error("Failed to fetch klines:", response.status)
         }
       } catch (error) {
         console.error("Error fetching klines:", error)
+              if (isMounted) setKlineData([])
       } finally {
-        setLoading(false)
+            if (isMounted) setLoading(false)
       }
     }
 
     fetchKlines();
     
-    const timerId = setTimeout(fetchKlines, 30000); 
+    const timerId = setInterval(fetchKlines, 15000); 
     
     return () => {
-      clearTimeout(timerId);
+      isMounted = false;
+      clearInterval(timerId);
     };
   }, [asset, interval])
 
@@ -87,7 +90,7 @@ export function TradingChart({ asset }: TradingChartProps) {
               <span>Trades: <span className="text-white">{trades}</span></span>
             </div>
           </div>
-          <Tabs value={interval} onValueChange={setInterval}>
+          <Tabs value={interval} onValueChange={setChartInterval}>
             <TabsList>
               <TabsTrigger value="1m">1m</TabsTrigger>
               <TabsTrigger value="5m">5m</TabsTrigger>

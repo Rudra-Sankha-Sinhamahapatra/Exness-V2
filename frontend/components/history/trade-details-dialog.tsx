@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, AlertTriangle, Copy, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, Copy } from 'lucide-react';
 import { apiService } from '@/lib/api-service';
 import { useToast } from '@/hooks/use-toast';
 
@@ -117,9 +117,6 @@ export function TradeDetailsDialog({ trade, open, onOpenChange, onTradeClose }: 
                 </Badge>
               )}
             </div>
-            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
-              <X className="h-4 w-4" />
-            </Button>
           </DialogTitle>
         </DialogHeader>
         
