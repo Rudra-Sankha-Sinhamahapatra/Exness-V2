@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import jwt from "jsonwebtoken"
 import { PrismaClient } from "@prisma/client"
+import { redis } from "../../server/redis"
 
 const COOKIE_EXPIRY = '7d';
 
@@ -38,6 +39,10 @@ describe("E2E: poller + engine + api", () => {
                 }
             }
         });
+
+          await redis.set("price-BTC", JSON.stringify({ price: "50000000000", decimal: 4 }));
+          await redis.set("price-ETH", JSON.stringify({ price: "3000000000", decimal: 6  }));
+          await redis.set("price-SOL", JSON.stringify({  price: "200000000", decimal: 6  }));
 
         wss = startWsMockserver(8089);
 
@@ -77,7 +82,7 @@ describe("E2E: poller + engine + api", () => {
 
         await wait(2000)
 
-        agent = request.agent("http://localhost:8000");
+        agent = request.agent("http://localhost:8002");
     }, 60000);
 
     afterAll(async () => {
