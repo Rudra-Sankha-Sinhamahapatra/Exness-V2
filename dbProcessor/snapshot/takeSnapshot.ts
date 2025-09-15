@@ -16,6 +16,15 @@ export async function takeSnapshot(data:any) {
             ]
         );
 
+             await pool.query(`
+            DELETE FROM snapshots
+            WHERE id NOT IN (
+                SELECT id FROM snapshots
+                ORDER BY created_at DESC, id DESC
+                LIMIT 10
+            )
+        `);
+
         // console.log("Snapshot saved:", snapshot.id);
         console.log(`Snapshot saved: ${snapshotId} at ${new Date().toISOString()}`);
         return { id: snapshotId };
