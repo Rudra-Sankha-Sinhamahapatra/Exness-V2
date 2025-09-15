@@ -1,6 +1,6 @@
 import { generateLinkToken, generateSessionToken, verifyToken } from "../token";
 import { resendClient } from "../resend";
-import { BACKEND_URL, FRONTEND_URL } from "../config";
+import { BACKEND_URL, FRONTEND_URL, NODE_ENV } from "../config";
 import { REDIS_PUSH_QUEUE } from "../redis";
 import { prisma } from "@exness/db";
 import { jsonResponse } from "../utils/jsonResponse";
@@ -115,7 +115,7 @@ export const authPost = async (req: Request): Promise<Response> => {
             })
         }
 
-        const isProd = process.env.NODE_ENV === "production";
+        const isProd = NODE_ENV === "production";
 
         const cookieOptions = [
             "Path=/",
