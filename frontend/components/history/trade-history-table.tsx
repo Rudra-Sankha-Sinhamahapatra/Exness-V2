@@ -312,7 +312,7 @@ export function TradeHistoryTable() {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       {trade.status === "open" && (
                         <Button 
                           variant="destructive" 
@@ -325,7 +325,7 @@ export function TradeHistoryTable() {
                           Close
                         </Button>
                       )}
-                    </TableCell>
+                    </TableCell> */}
                   </TableRow>
                 ))}
               </TableBody>

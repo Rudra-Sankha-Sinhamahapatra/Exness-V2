@@ -167,14 +167,14 @@ export function OpenPositions({ refreshKey, onPositionClosed }: { refreshKey?: n
                 </div>
 
                 <div>
-                  <div className="text-muted-foreground">PnL</div>
+                  {/* <div className="text-muted-foreground">PnL</div>
                   <div className={`font-medium ${position.pnl >= 0 ? "text-green-500" : "text-red-500"}`}>
                     {position.pnl >= 0 ? "+" : ""}${position.pnl.toFixed(2)}
                     <span className="text-xs ml-1">
                       ({position.pnl >= 0 ? "+" : ""}
                       {position.pnlPercent.toFixed(2)}%)
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
 

@@ -112,7 +112,7 @@ export function RecentTrades() {
                   </div>
 
                   {trade.status === "open" && (
-                    <Button size="sm" variant="ghost" onClick={() => handleCloseTrade(trade.orderId)} disabled={closingId === trade.orderId}>
+                    <Button size="sm" variant="ghost" onClick={() => handleCloseTrade(trade.orderId)} disabled={trade.closePrice?true:false}>
                       <X className="h-4 w-4" />
                     </Button>
                   )}
