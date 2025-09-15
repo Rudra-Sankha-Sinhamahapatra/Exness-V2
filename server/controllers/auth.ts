@@ -53,7 +53,6 @@ export const signup = async (req: Request): Promise<Response> => {
 
 export const signin = async (req: Request): Promise<Response> => {
     try {
-        console.log("signin hii")
         const { email } = await req.json() as { email?: string };
         if (!email) return jsonResponse({ error: "Email required" }, 400);
 
