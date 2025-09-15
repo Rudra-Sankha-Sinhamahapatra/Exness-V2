@@ -331,7 +331,7 @@ export const getTradeHistory = async (req: Request): Promise<Response> => {
             closePrice: trade.closePrice,
             leverage: trade.leverage,
             pnl: trade.pnl,
-            status: trade.closePrice ? 'closed' : 'open',
+            status: trade.closePrice!==null ? 'closed' : 'open',
             liquidated: trade.liquidated,
             createdAt: trade.createdAt,
             tradeType: trade.tradeType,
