@@ -4,11 +4,11 @@ import { BACKEND_URL, FRONTEND_URL } from "../config";
 import { REDIS_PUSH_QUEUE } from "../redis";
 import { prisma } from "@exness/db";
 import { jsonResponse } from "../utils/jsonResponse";
- 
+
 async function SendAuthEmail(email: string, type: "signup" | "signin", token: string) {
     const link = `${BACKEND_URL}/api/v1/signin/post?token=${token}`;
     console.log(email)
-    console.log(link) 
+    console.log(link)
     const res = await resendClient.emails.send({
         from: 'tradingpro@mail.rudrasankha.com',
         to: email,
@@ -115,12 +115,27 @@ export const authPost = async (req: Request): Promise<Response> => {
             })
         }
 
+        const isProd = process.env.NODE_ENV === "production";
+
+        const cookieOptions = [
+            "Path=/",
+            "HttpOnly",
+            isProd ? "SameSite=None" : "SameSite=Lax",
+            isProd ? "Secure" : "",
+            isProd ? "Domain=.rudrasankha.com" : "",
+            "Max-Age=604800",
+        ]
+            .filter(Boolean)
+            .join("; ");
+
+
+
         return new Response(null, {
             status: 302,
             headers: {
-                'Location': `${FRONTEND_URL}/dashboard`,
-                'Set-Cookie': `authToken=${sessionToken}; Path=/; HttpOnly; SameSite=Lax`
-            }
+                Location: `${FRONTEND_URL}/dashboard`,
+                "Set-Cookie": `authToken=${sessionToken}; ${cookieOptions}`,
+            },
         });
     } catch (error) {
         console.log('error: ', error);
@@ -132,21 +147,34 @@ export const authPost = async (req: Request): Promise<Response> => {
 
 export const logout = async (_req: Request): Promise<Response> => {
     try {
-      return new Response(
-        JSON.stringify({ message: "Logged out" }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            "Set-Cookie": `authToken=; Path=/; HttpOnly; SameSite=Lax; Expires=Thu, 01 Jan 1970 00:00:00 GMT`
-          }
-        }
-      );
+
+        const isProd = process.env.NODE_ENV === "production";
+
+        const cookieOptions = [
+            "Path=/",
+            "HttpOnly",
+            isProd ? "SameSite=None" : "SameSite=Lax",
+            isProd ? "Secure" : "",
+            isProd ? "Domain=.rudrasankha.com" : "",
+            "Expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        ]
+            .filter(Boolean)
+            .join("; ");
+
+        return new Response(
+            JSON.stringify({ message: "Logged out" }),
+            {
+                status: 200,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Set-Cookie": `authToken=; ${cookieOptions}`
+                }
+            }
+        );
     } catch (error) {
-      return jsonResponse(
-        { message: "Internal Server Error", error: String(error) },
-        500
-      );
+        return jsonResponse(
+            { message: "Internal Server Error", error: String(error) },
+            500
+        );
     }
-  };
-  
+};
