@@ -4,7 +4,7 @@ import { redis }from "../redis";
 export const rateLimiter = new RateLimiterRedis({
     storeClient: redis,
     keyPrefix: "rlflx",
-    points: 80,         
+    points: 70,         
     duration: 60,       
-    blockDuration: 40, 
+    blockDuration: 300, 
 })
