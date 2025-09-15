@@ -1,15 +1,15 @@
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "./config";
 
-const TOKEN_EXPIRY = "5m"; 
-const COOKIE_EXPIRY = "7d";
+// const TOKEN_EXPIRY = "5m"; 
+// const COOKIE_EXPIRY = "7d";
 
 export const generateLinkToken = (email:string) => {
-  return jwt.sign({email},JWT_SECRET, { expiresIn: TOKEN_EXPIRY } )
+  return jwt.sign({email},JWT_SECRET )
 }
 
 export const generateSessionToken = (email: string) => {
- const token = jwt.sign({ email },JWT_SECRET, { expiresIn: COOKIE_EXPIRY })
+ const token = jwt.sign({ email },JWT_SECRET)
  console.log("sessionToken:",token)
  return token;
 }
