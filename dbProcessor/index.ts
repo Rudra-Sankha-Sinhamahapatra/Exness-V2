@@ -7,8 +7,7 @@ import { prisma }from "@exness/db"
 
 let isShuttingDown = false;
 
-async function startDBProcessor() {
-await ensureGroup();    
+async function startDBProcessor() {   
 while(!isShuttingDown) {
     try {
         const res = await redis.xreadgroup(
@@ -52,6 +51,8 @@ async function main() {
     try {
         await initDB();
         console.log("Starting snapshot processor...");
+
+        await ensureGroup(); 
         await startDBProcessor();
     } catch (error) {
         console.error("Failed to start snapshot processor:", error);
