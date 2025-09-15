@@ -137,6 +137,7 @@ Sophisticated profit/loss calculation with:
   * PostgreSQL (With Prisma ORM for main DB , Pg library for snapshots)
   * Resend (For Mailing)
   * Jest & Supertest(for testing)
+  * rate-limiter-flexible & redis (for rate limiting)
   
 ## Backend System
 
