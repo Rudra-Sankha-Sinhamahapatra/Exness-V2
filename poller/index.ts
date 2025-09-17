@@ -7,6 +7,7 @@ const ws = new WebSocket(WS_URL);
 
 let Id = 1;
 
+function connectWS() {
 ws.on('open', () => {
     console.log("Connected to backpack WS");
 
@@ -74,7 +75,12 @@ ws.on("error", (err) => {
 
 ws.on("close", (code, reason) => {
     console.error("WS closed:", code, reason.toString());
+    setTimeout(connectWS,5000);
 });
+
+}
+
+connectWS();
 
 setInterval(async() => {
     // logs.txt
