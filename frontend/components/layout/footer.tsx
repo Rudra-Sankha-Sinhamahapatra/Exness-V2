@@ -10,7 +10,7 @@ export function Footer() {
           <div className="col-span-1 md:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <TrendingUp className="h-8 w-8 text-purple-400" />
-              <span className="text-xl font-bold text-white">CryptoTrade Pro</span>
+              <span className="text-xl font-bold text-white">TradingPro</span>
             </Link>
             <p className="text-gray-400 mb-4 max-w-md">
               Professional crypto trading platform with advanced tools, real-time data, and secure trading
@@ -67,7 +67,7 @@ export function Footer() {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">© 2024 CryptoTrade Pro. All rights reserved.</p>
+          <p className="text-gray-400 text-sm">© 2024 TradingPro Pro. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <Link href="/privacy" className="text-gray-400 hover:text-white text-sm transition-colors">
               Privacy Policy

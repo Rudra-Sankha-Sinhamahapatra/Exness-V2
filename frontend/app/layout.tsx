@@ -10,7 +10,7 @@ import { Footer } from "@/components/layout/footer"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "CryptoTrade Pro",
+  title: "TradingPro",
   description: "Professional crypto trading platform",
   generator: "Rudra Sankha Sinhamahapatra",
 }

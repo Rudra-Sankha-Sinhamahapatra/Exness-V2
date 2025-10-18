@@ -1,5 +1,6 @@
 "use client"
 
+import Aurora from "@/components/backgrounds/Aurora"
 import { Footer } from "@/components/layout/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,11 +10,16 @@ import Link from "next/link"
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <section
-        className="relative min-h-screen flex items-center justify-center bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/images/trading-bg.png')" }}
-      >
-        <div className="absolute inset-0 bg-black/60" />
+      <section className="relative min-h-screen flex items-center justify-center">
+        <div className="absolute inset-0">
+          <Aurora
+            colorStops={["#c084fc", "#f472b6", "#FF3232"]}
+            blend={0.5}
+            amplitude={1.0}
+            speed={0.5}
+          />
+        </div>
+        <div className="absolute inset-0 bg-black/40" />
         <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-bold mb-6 text-balance">
             Trade Crypto Like a{" "}
@@ -47,7 +53,7 @@ export default function LandingPage() {
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Choose CryptoTrade Pro?</h2>
+            <h2 className="text-4xl font-bold mb-4">Why Choose TradingPro?</h2>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Built for traders who demand the best tools and security in the crypto market.
             </p>
@@ -117,11 +123,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="py-20 px-4 bg-gradient-to-r from-purple-900/20 to-pink-900/20">
+      <section className="py-20 px-4 bg-gradient-to-r from-purple-900/20 via-pink-900/20 to-red-900/20">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-4">Ready to Start Trading?</h2>
           <p className="text-xl text-gray-300 mb-8">
-            Join thousands of traders who trust CryptoTrade Pro for their crypto investments.
+            Join thousands of traders who trust  TradingPro for their crypto investments.
           </p>
           <Link href="/signup">
             <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 text-lg">

@@ -48,7 +48,7 @@ export default function SignUpPage() {
           </Link>
           <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
             <TrendingUp className="h-8 w-8 text-purple-400" />
-            <span className="text-2xl font-bold text-white">CryptoTrade Pro</span>
+            <span className="text-2xl font-bold text-white">TradingPro</span>
           </Link>
           <h1 className="text-3xl font-bold text-white mb-2">Get Started</h1>
           <p className="text-gray-400">Create your trading account today</p>
